@@ -1,5 +1,5 @@
 /**
- * KariyerAI — Premium landing (tek sayfa).
+ * KariyerAI — Premium landing (single page, English UI).
  * React + Tailwind + Framer Motion + R3F
  */
 import {
@@ -11,7 +11,7 @@ import {
 } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
-/** Three.js sahnesi lazy — ilk paint hizli kalsin. */
+/** Lazy-load Three.js scene for a faster first paint. */
 const NeuralScene = lazy(() =>
   import("./NeuralScene").then((m) => ({ default: m.NeuralScene }))
 );
@@ -21,55 +21,55 @@ const REPO =
 
 const FEATURES = [
   {
-    title: "ATS skoru (aninda)",
-    desc: "LLM beklemeden yerel anahtar kelime + format analizi. Eksik skill'leri gorme.",
+    title: "Instant ATS score",
+    desc: "Keyword + format scoring with no LLM wait. See missing skills at a glance.",
     accent: "from-cyan-400/20 to-sky-500/5",
     ring: "group-hover:border-cyan-400/40",
   },
   {
     title: "RAG + ChromaDB",
-    desc: "CV ve is ilani parcalari vektorlenir; her analiz gercek belgelere dayanir.",
+    desc: "CV and job description chunks are embedded so every analysis stays document-grounded.",
     accent: "from-violet-400/20 to-fuchsia-500/5",
     ring: "group-hover:border-violet-400/40",
   },
   {
     title: "Gap & roadmap",
-    desc: "Kritik bosluklar, oncelik sirasi ve 30/90/365 gunluk uygulanabilir plan.",
+    desc: "Critical skill gaps, priority order, and a practical 30 / 90 / 365-day plan.",
     accent: "from-blue-400/20 to-indigo-500/5",
     ring: "group-hover:border-blue-400/40",
   },
   {
-    title: "Mektup & LinkedIn",
-    desc: "Ilana ozel motivasyon mektubu ve profesyonel profil metinleri.",
+    title: "Cover letter & LinkedIn",
+    desc: "Role-specific motivation letters and polished profile copy from your real CV.",
     accent: "from-pink-400/20 to-rose-500/5",
     ring: "group-hover:border-pink-400/40",
   },
   {
-    title: "Tam rapor export",
-    desc: "Markdown ve HTML indir; tarayicidan PDF olarak kaydet.",
+    title: "Full report export",
+    desc: "Download Markdown or HTML, then print to PDF from your browser.",
     accent: "from-lime-400/15 to-emerald-500/5",
     ring: "group-hover:border-lime-400/40",
   },
   {
-    title: "%100 yerel · ucretsiz",
-    desc: "Ollama ile calisir. API key yok. Verileriniz bilgisayarinizdan cikmaz.",
+    title: "100% local · free",
+    desc: "Runs on Ollama. No API keys. Your data never leaves your machine.",
     accent: "from-amber-400/15 to-orange-500/5",
     ring: "group-hover:border-amber-400/40",
   },
 ] as const;
 
 const STEPS = [
-  { n: "01", t: "Kur", d: "setup.bat — venv, paketler, modeller tek tik." },
-  { n: "02", t: "Ac", d: "start.bat — Streamlit arayuzu localhost:8501." },
-  { n: "03", t: "Yukle", d: "CV + is ilani (PDF/TXT/MD) veya demo veri." },
-  { n: "04", t: "Analiz et", d: "ATS, gap, roadmap, mektup, tam rapor." },
+  { n: "01", t: "Install", d: "setup.bat — venv, packages, and models in one click." },
+  { n: "02", t: "Launch", d: "start.bat — Streamlit UI at localhost:8501." },
+  { n: "03", t: "Upload", d: "CV + job post (PDF/TXT/MD) or load demo data." },
+  { n: "04", t: "Analyze", d: "ATS, gaps, roadmap, letters, full report." },
 ] as const;
 
 const STATS = [
-  { k: "0", l: "API key" },
-  { k: "100%", l: "Yerel calisma" },
-  { k: "ATS+", l: "Aninda skor" },
-  { k: "RAG", l: "Akilli baglam" },
+  { k: "0", l: "API keys" },
+  { k: "100%", l: "Local-first" },
+  { k: "ATS+", l: "Instant score" },
+  { k: "RAG", l: "Smart context" },
 ] as const;
 
 function useSmoothProgress() {
@@ -106,13 +106,13 @@ function Nav() {
         </a>
         <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
           <a className="transition hover:text-white" href="#features">
-            Ozellikler
+            Features
           </a>
           <a className="transition hover:text-white" href="#how">
-            Kurulum
+            Setup
           </a>
           <a className="transition hover:text-white" href="#stack">
-            Teknoloji
+            Stack
           </a>
         </nav>
         <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ function Nav() {
             GitHub
           </a>
           <a href="#cta" className="btn-primary !px-4 !py-2 text-xs sm:!px-5 sm:text-sm">
-            Basla
+            Get started
           </a>
         </div>
       </div>
@@ -165,7 +165,6 @@ function Hero() {
     <section id="top" className="relative min-h-[100svh] overflow-hidden pt-16">
       <div className="absolute inset-0 bg-grid-fade bg-grid opacity-40" />
       <FloatingOrbs />
-      {/* 3D sahne — sag tarafta */}
       <div className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[58%]">
         <Suspense
           fallback={
@@ -188,17 +187,17 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
             </span>
-            Yerel AI · API key yok · Ollama
+            Local AI · No API key · Powered by Ollama
           </div>
 
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Kariyerini{" "}
-            <span className="text-gradient">akilli bir kocluk</span> sistemiyle yonet.
+            Steer your career with an{" "}
+            <span className="text-gradient">intelligent coaching</span> system.
           </h1>
 
           <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-300 sm:text-lg">
-            CV ve is ilanini yerel modelle analiz et. ATS skoru, gap haritasi, roadmap,
-            motivasyon mektubu ve tam rapor — verilerin sunucuya gitmeden.
+            Analyze your CV and target job post with a local model. ATS score, gap map,
+            roadmap, cover letter, and full report — without sending your data to the cloud.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -208,7 +207,7 @@ function Hero() {
               whileTap={{ scale: 0.98 }}
               className="btn-primary"
             >
-              Hemen basla
+              Get started
               <span aria-hidden className="text-ink-900/70">
                 →
               </span>
@@ -221,7 +220,7 @@ function Hero() {
               whileTap={{ scale: 0.98 }}
               className="btn-ghost"
             >
-              Kaynak kodu
+              View source
             </motion.a>
           </div>
 
@@ -247,7 +246,7 @@ function Hero() {
           transition={{ delay: 1.1, duration: 0.8 }}
           className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-500 md:flex"
         >
-          <span>Kaydir</span>
+          <span>Scroll</span>
           <span className="h-8 w-px bg-gradient-to-b from-cyan-400/80 to-transparent" />
         </motion.div>
       </div>
@@ -305,8 +304,8 @@ function Features() {
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionTitle
           kicker="Platform"
-          title="Tek arayuzde kariyer istihbarati"
-          sub="Profesyonel is akisi: yukle, indeksle, skorla, raporla — hepsi yerelde."
+          title="Career intelligence in one interface"
+          sub="A professional workflow: upload, index, score, report — entirely on your machine."
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
@@ -340,9 +339,9 @@ function How() {
     <section id="how" className="relative py-24 sm:py-28">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionTitle
-          kicker="Akis"
-          title="4 adimda calisir durumda"
-          sub="Ogrenci projesi hissi yok — net kurulum, net deger."
+          kicker="Flow"
+          title="Up and running in four steps"
+          sub="No toy-project friction — clear setup, clear value."
         />
         <div className="relative grid gap-4 md:grid-cols-4">
           <div className="pointer-events-none absolute left-[12%] right-[12%] top-10 hidden h-px bg-gradient-to-r from-cyan-500/0 via-cyan-400/40 to-violet-500/0 md:block" />
@@ -374,7 +373,7 @@ function Stack() {
   return (
     <section id="stack" className="relative py-20">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <SectionTitle kicker="Stack" title="Maliyet yok, guc yerelde" />
+        <SectionTitle kicker="Stack" title="Zero cloud cost. Full local power." />
         <div className="flex flex-wrap justify-center gap-3">
           {items.map((item, i) => (
             <motion.span
@@ -426,17 +425,17 @@ function CTA() {
               Call to action
             </p>
             <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Kariyer kosunu bugun baslat — sunucu faturasi olmadan.
+              Start coaching your career today — no cloud bill.
             </h2>
             <p className="mt-4 max-w-xl text-slate-300">
-              Repo'yu klonla, <span className="text-cyan-200">setup.bat</span> calistir,
-              <span className="text-cyan-200"> start.bat</span> ile ac. Bu site yalnizca
-              bilgilendirmedir; asil uygulama bilgisayarinda calisir.
+              Clone the repo, run <span className="text-cyan-200">setup.bat</span>, then{" "}
+              <span className="text-cyan-200">start.bat</span>. This site is informational only;
+              the real app runs on your computer.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={REPO} target="_blank" rel="noreferrer" className="btn-primary">
-                GitHub'da ac
+                Open on GitHub
               </a>
               <button type="button" onClick={copy} className="btn-ghost">
                 <AnimatePresence mode="wait">
@@ -446,14 +445,14 @@ function CTA() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                   >
-                    {copied ? "Kopyalandi" : "Clone komutunu kopyala"}
+                    {copied ? "Copied" : "Copy clone command"}
                   </motion.span>
                 </AnimatePresence>
               </button>
             </div>
 
             <pre className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 font-mono text-xs text-cyan-100/90 sm:text-sm">
-              {`git clone ${REPO.replace("https://github.com/", "https://github.com/")}
+              {`git clone ${REPO}
 cd CarieerAi-FULLSTACK-AI-WEB-APP
 setup.bat
 start.bat
@@ -473,17 +472,17 @@ function Footer() {
         <div>
           <span className="font-display font-semibold text-slate-300">KariyerAI</span>
           <span className="mx-2 text-slate-600">·</span>
-          Yerel AI kariyer kocu
+          Local AI career coach
         </div>
         <div className="flex gap-5">
           <a className="hover:text-slate-300" href={REPO} target="_blank" rel="noreferrer">
             GitHub
           </a>
           <a className="hover:text-slate-300" href="#features">
-            Ozellikler
+            Features
           </a>
           <a className="hover:text-slate-300" href="#cta">
-            Kurulum
+            Setup
           </a>
         </div>
       </div>
@@ -491,7 +490,7 @@ function Footer() {
   );
 }
 
-/** Ana landing komponenti — production-ready tek sayfa. */
+/** Main landing component — production-ready single page. */
 export function LandingPage() {
   return (
     <div className="relative min-h-screen bg-ink-950 text-slate-100">
