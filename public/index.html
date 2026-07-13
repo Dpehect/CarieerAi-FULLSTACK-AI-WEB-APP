@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KariyerAI — Yerel AI Kariyer Koçu</title>
+  <meta name="description" content="KariyerAI bilgisayarınızda çalışan yerel AI kariyer koçudur. Vercel üzerinde LLM çalışmaz; Ollama + Streamlit ile lokal çalıştırın." />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #0ea5e9;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1e3a5f 0%, transparent 50%),
+                  radial-gradient(900px 500px at 100% 0%, #0c4a6e 0%, transparent 45%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 4rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.03em;
+    }
+    .lead { color: var(--muted); font-size: 1.1rem; margin-bottom: 1.75rem; }
+    .card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      margin: 0 0 0.6rem;
+      font-size: 1.05rem;
+    }
+    .warn { border-color: rgba(245, 158, 11, 0.45); }
+    .warn h2 { color: var(--warn); }
+    code, pre {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 0.88rem;
+    }
+    pre {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+      overflow-x: auto;
+      color: #bae6fd;
+      margin: 0.75rem 0 0;
+    }
+    a { color: var(--accent); }
+    ul { margin: 0.4rem 0 0; padding-left: 1.2rem; color: var(--muted); }
+    li { margin: 0.25rem 0; }
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">%100 Yerel · API Key Yok</span>
+    <h1>🎯 KariyerAI</h1>
+    <p class="lead">
+      Profesyonel AI kariyer koçu — CV &amp; iş ilanı analizi, gap, roadmap, sohbet.
+      <strong>LLM olarak Ollama kullanır; bulut sunucuda (Vercel) çalışmaz.</strong>
+    </p>
+
+    <div class="card warn">
+      <h2>⚠️ Bu sayfa bilerek statik</h2>
+      <p style="margin:0;color:var(--muted)">
+        Vercel yalnızca bilgilendirme sitesi sunar. Asıl uygulama bilgisayarınızda
+        <code>streamlit run streamlit_app.py</code> ile açılır (Ollama + ChromaDB gerekir).
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>1) Gereksinimler</h2>
+      <ul>
+        <li>Python 3.10–3.12 (tercihen)</li>
+        <li><a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> + modeller:
+          <code>llama3.1:8b</code>, <code>nomic-embed-text</code></li>
+        <li>GitHub reposunu klonlayın</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>2) Kurulum &amp; çalıştırma (Windows)</h2>
+      <pre>git clone https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP.git
+cd CarieerAi-FULLSTACK-AI-WEB-APP
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+ollama pull llama3.1:8b
+ollama pull nomic-embed-text
+streamlit run streamlit_app.py</pre>
+      <p style="margin:0.75rem 0 0;color:var(--muted)">
+        Tarayıcı: <a href="http://localhost:8501">http://localhost:8501</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>3) Neden Vercel değil?</h2>
+      <ul>
+        <li><strong>Ollama</strong> sizin PC’nizde çalışır (<code>localhost:11434</code>)</li>
+        <li><strong>Streamlit</strong> uzun ömürlü süreç ister; Vercel serverless function ister</li>
+        <li><strong>ChromaDB</strong> yerel disk kullanır</li>
+      </ul>
+    </div>
+
+    <footer>
+      Kaynak kod:
+      <a href="https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP" target="_blank" rel="noopener">
+        GitHub — CarieerAi-FULLSTACK-AI-WEB-APP
+      </a>
+    </footer>
+  </div>
+</body>
+</html>

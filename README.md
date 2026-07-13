@@ -14,7 +14,7 @@
 
 ```
 aicoach/
-├── main.py                 # Streamlit arayüzü (başlangıç noktası)
+├── streamlit_app.py                 # Streamlit arayüzü (başlangıç noktası)
 ├── prompts.py              # Tüm LLM prompt şablonları
 ├── document_processor.py   # PDF okuma, temizleme, chunking
 ├── rag_engine.py           # ChromaDB + embedding + arama
@@ -165,7 +165,7 @@ Doğrulama:
 dir
 ```
 
-Şunları görmelisiniz: `main.py`, `requirements.txt`, `prompts.py`, ...
+Şunları görmelisiniz: `streamlit_app.py`, `requirements.txt`, `prompts.py`, ...
 
 ---
 
@@ -233,7 +233,7 @@ python -m pip install -r requirements.txt --upgrade
 Ollama’nın çalıştığından emin olun, sanal ortam aktifken:
 
 ```powershell
-streamlit run main.py
+streamlit run streamlit_app.py
 ```
 
 Otomatik tarayıcı açılır. Açılmazsa adreste şunu deneyin:
@@ -267,7 +267,7 @@ Her yeni terminal oturumunda:
 ```powershell
 cd C:\Users\USER\Desktop\tries\aicoach
 .\.venv\Scripts\Activate.ps1
-streamlit run main.py
+streamlit run streamlit_app.py
 ```
 
 Ollama’nın arka planda açık olduğundan emin olun.
@@ -323,7 +323,7 @@ python -m pip install -r requirements.txt
 ### 8) Port 8501 dolu
 
 ```powershell
-streamlit run main.py --server.port 8502
+streamlit run streamlit_app.py --server.port 8502
 ```
 
 ---
@@ -337,14 +337,14 @@ streamlit run main.py --server.port 8502
                     ↓
             llm_handler (Ollama chat + prompts + memory)
                     ↓
-              main.py (Streamlit UI)
+              streamlit_app.py (Streamlit UI)
 ```
 
 - **prompts.py**: Analiz / sohbet şablonları  
 - **document_processor.py**: Metin çıkarma ve parçalama  
 - **rag_engine.py**: Vektör indeks + anlamsal arama  
 - **llm_handler.py**: Ollama çağrıları, streaming, conversation memory  
-- **main.py**: Kullanıcı arayüzü ve orkestrasyon  
+- **streamlit_app.py**: Kullanıcı arayüzü ve orkestrasyon  
 
 Veriler `data/chroma_db/` altında yerelde saklanır; dışarı API çağrısı yapılmaz (Ollama localhost hariç).
 
@@ -367,29 +367,25 @@ Bu proje **bilerek yerel**dir. Şunlara bağımlıdır:
 | Bileşen | Neden bulutta sorun? |
 |--------|----------------------|
 | **Ollama** | Bilgisayarında çalışan yerel LLM sunucusu (`localhost:11434`). Vercel’de Ollama yok. |
-| **Streamlit** | `streamlit run main.py` ile ayakta duran uzun ömürlü web app. Vercel ise kısa ömürlü **serverless function** bekler (`app` / `handler` export). |
+| **Streamlit** | `streamlit run streamlit_app.py` ile ayakta duran uzun ömürlü web app. Vercel ise kısa ömürlü **serverless function** bekler (`app` / `handler` export). |
 | **ChromaDB** | Diskte kalıcı vektör DB (`data/chroma_db/`). Serverless ortamda kalıcı disk yok / uygun değil. |
 
-Bu yüzden Vercel log’unda şu hata **normaldir**:
+**Vercel ne yayınlar?**
 
-```text
-Found main.py but it does not export a top-level "app", "application", or "handler" variable.
-```
+`vercel.json` + `public/index.html` sayesinde Vercel yalnızca **statik bilgilendirme sayfası** deploy eder.
+AI (Ollama / Streamlit / ChromaDB) bulutta **çalışmaz**.
 
-**Ne yapmalısın?**
-
-1. Vercel projesini bu repo için **kapat / sil** (veya deploy’u durdur).  
-2. Uygulamayı **kendi bilgisayarında** çalıştır:
+**Asıl uygulama (kendi PC’n):**
 
 ```powershell
 cd C:\Users\USER\Desktop\tries\aicoach
 .\.venv\Scripts\Activate.ps1
-streamlit run main.py
+streamlit run streamlit_app.py
 ```
 
-3. Tarayıcı: http://localhost:8501  
+Tarayıcı: http://localhost:8501  
 
-İleride “herkese açık web sitesi” istersen mimari değişir (uzak API, sunucu, maliyet). Bu haliyle hedef: **%100 yerel, API key yok**.
+> Giriş dosyası adı: `streamlit_app.py` (eski `main.py` Vercel’in Python entrypoint sanmasına yol açıyordu).
 
 ---
 
