@@ -44,55 +44,91 @@ st.set_page_config(
 
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-html, body, [class*="css"] { font-family: Inter, system-ui, sans-serif; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+html, body, [class*="css"] { font-family: "DM Sans", system-ui, sans-serif; }
 .block-container { padding-top: 1rem; max-width: 1180px; }
 div[data-testid="stSidebar"] {
-  background: linear-gradient(180deg, #0b1220 0%, #111827 55%, #0f172a 100%);
+  background: linear-gradient(175deg, #05070f 0%, #0c1222 40%, #121a33 70%, #0b1b2e 100%);
+  border-right: 1px solid rgba(56,189,248,.12);
 }
-div[data-testid="stSidebar"] * { color: #e5e7eb !important; }
+div[data-testid="stSidebar"] * { color: #e2e8f0 !important; }
 div[data-testid="stSidebar"] .stCaption,
-div[data-testid="stSidebar"] label { color: #9ca3af !important; }
+div[data-testid="stSidebar"] label { color: #94a3b8 !important; }
 div[data-testid="stSidebar"] .stButton > button {
-  background: #1f2937; border: 1px solid #374151; color: #f9fafb;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(56,189,248,.25); color: #f8fafc;
+  border-radius: 10px; transition: all .2s ease;
 }
-div[data-testid="stSidebar"] .stButton > button:hover { border-color: #38bdf8; }
+div[data-testid="stSidebar"] .stButton > button:hover {
+  border-color: #22d3ee; box-shadow: 0 0 18px rgba(34,211,238,.2);
+}
 div[data-testid="stSidebar"] [data-baseweb="select"] span { color: #111 !important; }
+div[data-testid="stSidebar"] .stSuccess { background: rgba(34,197,94,.12); }
 .hero {
-  background: linear-gradient(120deg, #0f172a 0%, #1e3a5f 42%, #0284c7 100%);
-  border-radius: 18px; padding: 1.45rem 1.7rem; color: #fff; margin-bottom: 1.1rem;
-  box-shadow: 0 12px 40px rgba(2,132,199,.22);
+  background:
+    radial-gradient(800px 200px at 10% 0%, rgba(34,211,238,.25), transparent 55%),
+    radial-gradient(600px 180px at 90% 20%, rgba(167,139,250,.22), transparent 50%),
+    linear-gradient(125deg, #0a0e1a 0%, #12203a 45%, #0e4a6e 100%);
+  border-radius: 20px; padding: 1.55rem 1.8rem; color: #fff; margin-bottom: 1.15rem;
+  border: 1px solid rgba(148,163,184,.12);
+  box-shadow: 0 16px 48px rgba(14,165,233,.18), inset 0 1px 0 rgba(255,255,255,.06);
 }
-.hero h1 { margin: 0; font-size: 1.8rem; font-weight: 700; letter-spacing: -.03em; }
-.hero p { margin: .35rem 0 0; opacity: .92; font-size: .98rem; }
-.pills { margin-top: .8rem; display: flex; flex-wrap: wrap; gap: .4rem; }
+.hero h1 {
+  margin: 0; font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.9rem; font-weight: 700; letter-spacing: -.03em;
+  background: linear-gradient(90deg, #fff 0%, #a5f3fc 50%, #c4b5fd 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero p { margin: .45rem 0 0; opacity: .92; font-size: .98rem; color: #e2e8f0; }
+.pills { margin-top: .85rem; display: flex; flex-wrap: wrap; gap: .4rem; }
 .pill {
-  font-size: .7rem; font-weight: 600; padding: .2rem .55rem; border-radius: 999px;
-  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  font-size: .7rem; font-weight: 600; padding: .22rem .6rem; border-radius: 999px;
+  background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.28); color: #a5f3fc;
 }
 .score-box {
-  border-radius: 14px; padding: 1rem; border: 1px solid #e2e8f0;
-  background: #fff; text-align: center;
+  border-radius: 16px; padding: 1.05rem; border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%);
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(14,165,233,.08);
 }
-.score-num { font-size: 2rem; font-weight: 700; letter-spacing: -.03em; color: #0f172a; }
+.score-num {
+  font-size: 2.05rem; font-weight: 700; letter-spacing: -.03em;
+  background: linear-gradient(135deg, #0369a1, #7c3aed);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
 .score-label { color: #64748b; font-size: .84rem; }
 .chip {
-  display: inline-block; margin: .15rem .25rem .15rem 0; padding: .15rem .5rem;
+  display: inline-block; margin: .15rem .25rem .15rem 0; padding: .18rem .55rem;
   border-radius: 999px; font-size: .78rem; font-weight: 500;
 }
-.chip-ok { background: #dcfce7; color: #166534; }
-.chip-miss { background: #fee2e2; color: #991b1b; }
-.ok { color: #4ade80; font-weight: 600; }
-.bad { color: #f87171; font-weight: 600; }
+.chip-ok { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.chip-miss { background: #ffe4e6; color: #9f1239; border: 1px solid #fda4af; }
+.ok { color: #34d399; font-weight: 600; }
+.bad { color: #fb7185; font-weight: 600; }
 .upload-hint {
-  border: 1.5px dashed #4b5563; border-radius: 12px; padding: .7rem .9rem;
-  background: rgba(255,255,255,.04); color: #9ca3af; font-size: .85rem; margin-bottom: .45rem;
+  border: 1.5px dashed rgba(56,189,248,.35); border-radius: 12px; padding: .7rem .9rem;
+  background: rgba(14,165,233,.06); color: #94a3b8; font-size: .85rem; margin-bottom: .45rem;
 }
 .step {
   display: flex; gap: .65rem; align-items: flex-start; margin: .45rem 0;
-  padding: .65rem .8rem; border-radius: 10px; background: #f1f5f9; border: 1px solid #e2e8f0;
+  padding: .7rem .9rem; border-radius: 12px;
+  background: linear-gradient(90deg, #f0f9ff, #f5f3ff);
+  border: 1px solid #e0e7ff;
 }
-.step b { color: #0284c7; min-width: 1.4rem; }
+.step b {
+  color: #fff; min-width: 1.5rem; height: 1.5rem; border-radius: 8px;
+  display: grid; place-items: center; font-size: .75rem;
+  background: linear-gradient(135deg, #0284c7, #7c3aed);
+}
+/* Primary buttons in main area */
+div[data-testid="stAppViewContainer"] .stButton > button[kind="primary"] {
+  background: linear-gradient(135deg, #0284c7, #6366f1) !important;
+  border: none !important; color: #fff !important;
+  box-shadow: 0 8px 20px rgba(2,132,199,.25);
+}
+div[data-testid="stTabs"] button[aria-selected="true"] {
+  color: #0284c7 !important; border-bottom-color: #22d3ee !important;
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)

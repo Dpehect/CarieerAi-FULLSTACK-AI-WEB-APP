@@ -1,7 +1,4 @@
-# Vercel bu dosyaları görmesin → Python runtime tetiklenmesin
-# Asıl uygulama yerelde Streamlit ile çalışır.
-
-# Python kaynakları Vercel'e gitmesin / Python runtime tetiklenmesin
+# Python / Streamlit kaynaklari Vercel'e gitmesin
 *.py
 requirements.txt
 .venv
@@ -13,3 +10,6 @@ __pycache__
 README.md
 .gitignore
 streamlit_app.py
+public
+setup.bat
+start.bat

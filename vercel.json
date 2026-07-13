@@ -1,15 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/public/$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
-  ]
+  "framework": "vite",
+  "installCommand": "npm install --prefix landing",
+  "buildCommand": "npm run build --prefix landing",
+  "outputDirectory": "landing/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

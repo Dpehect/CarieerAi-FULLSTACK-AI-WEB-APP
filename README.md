@@ -105,10 +105,18 @@ aicoach/
 
 ---
 
-## Vercel
+## Vercel (premium landing)
 
-Bu repo Vercel'de **statik bilgilendirme** yayinlar.
-Streamlit + Ollama **Vercel serverless'da calismaz**.
+Vercel, `landing/` altindaki **React + TypeScript + Tailwind + Framer Motion + R3F**
+sitesini yayinlar. Streamlit + Ollama bulutta calismaz; site bilgilendirme + kurulum CTA'sidir.
+
+Yerelde landing onizleme:
+
+```powershell
+cd landing
+npm install
+npm run dev
+```
 
 ---
 
