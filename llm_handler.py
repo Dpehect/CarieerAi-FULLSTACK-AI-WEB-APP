@@ -242,7 +242,7 @@ class LLMHandler:
                 if c:
                     yield c
         except Exception as e:
-            yield f"\n\n⚠️ Hata: {e}"
+            yield f"\n\nHata: {e}"
 
     def chat_stream(self, user_message: str, use_rag: bool = True, top_k: int = 5) -> Generator[str, None, None]:
         context = self._ctx(user_message, top_k=top_k) if use_rag else ""

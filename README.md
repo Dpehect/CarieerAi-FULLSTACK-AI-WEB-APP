@@ -1,28 +1,28 @@
-# 🎯 KariyerAI — Yerel AI Kariyer Koçu
+# KariyerAI — Yerel AI Kariyer Kocu
 
-Profesyonel, **ücretsiz** ve **%100 yerel** kariyer koçu.
+Profesyonel, **ucretsiz** ve **%100 yerel** kariyer kocu.
 
-- PDF / TXT / MD + metin CV & iş ilanı  
-- **ATS skoru** (anında, LLM beklemez) + renkli kelime etiketleri  
-- **Demo veri** (tek tık test)  
-- RAG (ChromaDB + `nomic-embed-text`)  
-- Gap, roadmap, CV, **motivasyon mektubu**, **LinkedIn**, mülakat  
-- **Tam rapor** + Markdown / HTML export (HTML → PDF yazdır)  
-- Sohbet hafızası + önerilen sorular + yerel oturum kaydı  
-- Otomatik model seçimi · **API key yok** — [Ollama](https://ollama.com)
+- PDF / TXT / MD + metin CV ve is ilani
+- **ATS skoru** (aninda, LLM beklemez) + kelime etiketleri
+- **Demo veri** (tek tik test)
+- RAG (ChromaDB + `nomic-embed-text`)
+- Gap, roadmap, CV, **motivasyon mektubu**, **LinkedIn**, mulakat
+- **Tam rapor** + Markdown / HTML export (HTML - PDF yazdir)
+- Sohbet hafizasi + onerilen sorular + yerel oturum kaydi
+- Otomatik model secimi - **API key yok** — [Ollama](https://ollama.com)
 
-> Vercel sayfası yalnızca bilgilendirmedir. Asıl app bilgisayarınızda çalışır.
+> Vercel sayfasi yalnizca bilgilendirmedir. Asil uygulama bilgisayarinizda calisir.
 
 ---
 
-## ⚡ Windows — en kolay kurulum (önerilen)
+## Windows — en kolay kurulum (onerilen)
 
-### 0) Önkoşullar (bir kez)
+### 0) Onkosullar (bir kez)
 
-1. **Python 3.10–3.12** → https://www.python.org/downloads/  
-   - Kurulumda **Add python.exe to PATH** işaretleyin  
-2. **Ollama** → https://ollama.com/download  
-   - Kurulumdan sonra Ollama’yı açık bırakın  
+1. **Python 3.10–3.12** — https://www.python.org/downloads/
+   - Kurulumda **Add python.exe to PATH** isaretleyin
+2. **Ollama** — https://ollama.com/download
+   - Kurulumdan sonra Ollama'yi acik birakin
 
 ### 1) Projeyi indir
 
@@ -31,27 +31,27 @@ git clone https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP.git
 cd CarieerAi-FULLSTACK-AI-WEB-APP
 ```
 
-veya ZIP indirip klasörü açın.
+veya ZIP indirip klasoru acin.
 
-### 2) Tek tık kurulum
+### 2) Tek tik kurulum
 
-Klasörde **`setup.bat`** dosyasına **çift tıklayın**.
+Klasorde **`setup.bat`** dosyasina **cift tiklayin**.
 
 Bu script:
 
-- sanal ortam (`.venv`) oluşturur  
-- paketleri kurar  
-- `nomic-embed-text` + `llama3.1:8b` modellerini çeker (yoksa)  
+- sanal ortam (`.venv`) olusturur
+- paketleri kurar
+- `nomic-embed-text` + `llama3.1:8b` modellerini ceker (yoksa)
 
-### 3) Tek tık çalıştır
+### 3) Tek tik calistir
 
-**`start.bat`** dosyasına çift tıklayın.
+**`start.bat`** dosyasina cift tiklayin.
 
-Tarayıcı: **http://localhost:8501**
+Tarayici: **http://localhost:8501**
 
 ---
 
-## 🖥️ Manuel kurulum (isterseniz)
+## Manuel kurulum
 
 ```powershell
 cd C:\Users\USER\Desktop\tries\aicoach
@@ -65,11 +65,11 @@ streamlit run main.py
 
 ---
 
-## 📁 Proje yapısı
+## Proje yapisi
 
 ```text
 aicoach/
-├── setup.bat / start.bat  # Tek tık kurulum & çalıştır
+├── setup.bat / start.bat  # Tek tik kurulum ve calistir
 ├── main.py                # Streamlit UI
 ├── config.py              # Merkezi ayarlar
 ├── sample_data.py         # Demo CV / ilan
@@ -83,50 +83,50 @@ aicoach/
 
 ---
 
-## 🧭 Uygulama kullanımı
+## Uygulama kullanimi
 
-1. Sol menü → **Bağlantıyı kontrol et**  
-2. **CV indeksle** + **İlan indeksle**  
-3. **ATS** → anında skor  
-4. Analiz / Gap / Roadmap / CV / Mülakat  
-5. **Tam rapor** → MD veya HTML indir  
-6. HTML’i tarayıcıda aç → **Ctrl+P** → PDF olarak kaydet  
+1. Sol menu — **Baglantiyi kontrol et**
+2. **CV indeksle** + **Ilan indeksle**
+3. **ATS** — aninda skor
+4. Analiz / Gap / Roadmap / CV / Mulakat
+5. **Tam rapor** — MD veya HTML indir
+6. HTML'i tarayicida ac — **Ctrl+P** — PDF olarak kaydet
 
 ---
 
-## 💰 Maliyet
+## Maliyet
 
-| Bileşen | Ücret |
+| Bilesen | Ucret |
 |--------|--------|
-| Ollama + modeller | Ücretsiz |
-| Streamlit / ChromaDB | Ücretsiz |
+| Ollama + modeller | Ucretsiz |
+| Streamlit / ChromaDB | Ucretsiz |
 | API key | Yok |
-| Vercel landing | Ücretsiz (statik) |
+| Vercel landing | Ucretsiz (statik) |
 
 ---
 
-## ⚠️ Vercel
+## Vercel
 
-Bu repo Vercel’de **statik bilgilendirme** yayınlar.  
-Streamlit + Ollama **Vercel serverless’da çalışmaz**.
+Bu repo Vercel'de **statik bilgilendirme** yayinlar.
+Streamlit + Ollama **Vercel serverless'da calismaz**.
 
 ---
 
-## 🛠️ Sorun giderme
+## Sorun giderme
 
-| Sorun | Çözüm |
+| Sorun | Cozum |
 |-------|--------|
-| `setup.bat` Python bulamıyor | Python’u PATH ile kur, yeni terminal |
-| Ollama bağlantı yok | Ollama uygulamasını aç |
+| `setup.bat` Python bulamiyor | Python'u PATH ile kur, yeni terminal |
+| Ollama baglanti yok | Ollama uygulamasini ac |
 | Model yok | `ollama pull llama3.1:8b` |
 | Embedding hata | `ollama pull nomic-embed-text` |
-| PDF metin yok | Metin yapıştır |
-| Yavaş cevap | 8B model, diğer programları kapat |
+| PDF metin yok | Metin yapistir |
+| Yavas cevap | 8B model, diger programlari kapat |
 
 ---
 
 ## Lisans / not
 
-Eğitim ve kişisel kullanım. Tavsiyeler bilgilendirme amaçlıdır.
+Egitim ve kisisel kullanim. Tavsiyeler bilgilendirme amaclidir.
 
-**Kurulum:** `setup.bat` → **Çalıştır:** `start.bat` → http://localhost:8501 🚀
+**Kurulum:** `setup.bat` — **Calistir:** `start.bat` — http://localhost:8501

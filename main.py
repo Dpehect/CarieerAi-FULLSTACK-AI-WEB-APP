@@ -37,7 +37,7 @@ from sample_data import DEMO_CV, DEMO_JOB
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title=APP_NAME,
-    page_icon="🎯",
+    page_icon="KA",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -191,7 +191,7 @@ def export_buttons(key: str, title: str) -> None:
     c1, c2 = st.columns(2)
     with c1:
         st.download_button(
-            "⬇ Markdown",
+            "Markdown indir",
             data=bundle["markdown"],
             file_name=f"kariyerai_{key}_{datetime.now():%Y%m%d_%H%M}.md",
             mime="text/markdown",
@@ -200,7 +200,7 @@ def export_buttons(key: str, title: str) -> None:
         )
     with c2:
         st.download_button(
-            "⬇ HTML → PDF yazdır",
+            "HTML indir (PDF icin yazdir)",
             data=bundle["html"],
             file_name=f"kariyerai_{key}_{datetime.now():%Y%m%d_%H%M}.html",
             mime="text/html",
@@ -212,7 +212,7 @@ def export_buttons(key: str, title: str) -> None:
 def run_analysis(kind: str, title: str, runner) -> None:
     if not need_docs():
         return
-    if st.button(f"▶ {title}", type="primary", use_container_width=True, key=f"run_{kind}"):
+    if st.button(f"Calistir: {title}", type="primary", use_container_width=True, key=f"run_{kind}"):
         h = llm()
         h.temperature = st.session_state.temperature
         box = st.empty()
@@ -333,12 +333,12 @@ def load_demo() -> None:
 # ---------------------------------------------------------------------------
 def sidebar() -> None:
     with st.sidebar:
-        st.markdown(f"### 🎯 {APP_NAME}")
+        st.markdown(f"### {APP_NAME}")
         st.caption(APP_TAGLINE)
 
         st.markdown("#### Sistem")
-        if st.button("Bağlantıyı kontrol et", use_container_width=True):
-            with st.spinner("Kontrol…"):
+        if st.button("Baglantıyı kontrol et", use_container_width=True):
+            with st.spinner("Kontrol..."):
                 st.session_state.ollama_status = llm().check_connection()
                 st_ = st.session_state.ollama_status
                 if st_.get("suggested") and not st_.get("ok"):
@@ -347,9 +347,9 @@ def sidebar() -> None:
         st_ = st.session_state.ollama_status
         if st_:
             if st_["ok"]:
-                st.markdown(f'<span class="ok">● {st_["message"]}</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="ok">{st_["message"]}</span>', unsafe_allow_html=True)
             else:
-                st.markdown('<span class="bad">● Bağlantı / model sorunu</span>', unsafe_allow_html=True)
+                st.markdown('<span class="bad">Bağlantı / model sorunu</span>', unsafe_allow_html=True)
                 st.caption(st_["message"])
 
         models = (st_ or {}).get("models") or [DEFAULT_MODEL, "qwen2.5:14b", "llama3.2", "mistral"]
@@ -366,13 +366,13 @@ def sidebar() -> None:
         st.session_state.top_k = st.slider("RAG top-k", 2, 10, int(st.session_state.top_k))
 
         st.divider()
-        if st.button("🧪 Demo veri yükle", use_container_width=True, help="Örnek CV + ilan (test)"):
+        if st.button("Demo veri yukle", use_container_width=True, help="Ornek CV / ilan ile hizli test"):
             load_demo()
             st.rerun()
 
-        st.markdown("#### 📄 CV")
+        st.markdown("#### CV")
         st.markdown(
-            '<div class="upload-hint">PDF / TXT / MD veya yapıştır → İndeksle</div>',
+            '<div class="upload-hint">PDF / TXT / MD veya metin yapistir, sonra Indeksle</div>',
             unsafe_allow_html=True,
         )
         cv_file = st.file_uploader(
@@ -388,9 +388,9 @@ def sidebar() -> None:
             s = st.session_state.cv_stats
             st.success(f"CV · {s['chunks']} parça · ~{s['words_approx']} kelime")
 
-        st.markdown("#### 💼 İş ilanı")
+        st.markdown("#### Is ilani")
         st.markdown(
-            '<div class="upload-hint">PDF / TXT / MD veya yapıştır → İndeksle</div>',
+            '<div class="upload-hint">PDF / TXT / MD veya metin yapistir, sonra Indeksle</div>',
             unsafe_allow_html=True,
         )
         job_file = st.file_uploader(
@@ -461,8 +461,8 @@ def tab_home() -> None:
     )
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("CV", "Hazır ✓" if st.session_state.cv_loaded else "—")
-    c2.metric("İlan", "Hazır ✓" if st.session_state.job_loaded else "—")
+    c1.metric("CV", "Hazir" if st.session_state.cv_loaded else "-")
+    c2.metric("Ilan", "Hazir" if st.session_state.job_loaded else "-")
     ats = st.session_state.ats_result
     c3.metric("ATS", f"{ats.score}" if ats else "—")
     try:
@@ -481,7 +481,7 @@ def tab_home() -> None:
     )
 
     if not docs_ready():
-        if st.button("🧪 Demo ile dene", type="primary"):
+        if st.button("Demo ile dene", type="primary"):
             load_demo()
             st.rerun()
 
@@ -589,7 +589,7 @@ def tab_ats() -> None:
         },
     )
     st.download_button(
-        "⬇ Yerel ATS (.md)",
+        "Yerel ATS (.md) indir",
         data=raw_md,
         file_name=f"kariyerai_ats_{datetime.now():%Y%m%d}.md",
         mime="text/markdown",
@@ -623,7 +623,7 @@ def tab_chat() -> None:
                     box,
                 )
             except Exception as e:
-                ans = f"⚠️ {e}"
+                ans = f"Hata: {e}"
                 box.markdown(ans)
                 llm().memory.add("assistant", ans)
         st.session_state.chat_messages.append({"role": "assistant", "content": ans})
@@ -678,14 +678,14 @@ def tab_full_report() -> None:
         bundle = export_bundle(md, "KariyerAI Tam Rapor")
         c1, c2 = st.columns(2)
         c1.download_button(
-            "⬇ Rapor MD",
+            "Rapor MD indir",
             bundle["markdown"],
             f"kariyerai_full_{datetime.now():%Y%m%d}.md",
             "text/markdown",
             use_container_width=True,
         )
         c2.download_button(
-            "⬇ Rapor HTML",
+            "Rapor HTML indir",
             bundle["html"],
             f"kariyerai_full_{datetime.now():%Y%m%d}.html",
             "text/html",
@@ -701,17 +701,17 @@ def main() -> None:
 
     tabs = st.tabs(
         [
-            "🏠 Panel",
-            "📊 ATS",
-            "📈 Analiz",
-            "🔍 Gap",
-            "🗺️ Roadmap",
-            "✨ CV",
-            "✉️ Mektup",
-            "🔗 LinkedIn",
-            "🎤 Mülakat",
-            "📋 Tam rapor",
-            "💬 Sohbet",
+            "Panel",
+            "ATS",
+            "Analiz",
+            "Gap",
+            "Roadmap",
+            "CV",
+            "Mektup",
+            "LinkedIn",
+            "Mulakat",
+            "Tam rapor",
+            "Sohbet",
         ]
     )
 
