@@ -365,7 +365,7 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
             {[
               ["0", "API keys"],
               ["100%", "On-device"],
-              ["Live", "Path map"],
+              ["Local", "Private"],
             ].map(([k, v]) => (
               <motion.div
                 key={v}
@@ -382,28 +382,27 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
           </motion.div>
         </motion.div>
 
-        {/* Creative motion visual (replaces spinning 3D orb) */}
+        {/* Product stage — quiet, premium motion */}
         <motion.div
           style={{ y: yVisual, opacity: opVisual }}
-          initial={{ opacity: 0, x: 40 }}
+          initial={{ opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.2, ease: EASE }}
-          className="relative hidden h-[min(520px,70vh)] lg:block"
+          transition={{ duration: 1, delay: 0.18, ease: EASE }}
+          className="relative hidden h-[min(500px,68vh)] lg:block"
         >
-          <div className="glass absolute inset-0 overflow-hidden rounded-[2rem]">
+          <div className="absolute inset-0 overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02]">
             <HeroVisual />
           </div>
         </motion.div>
       </div>
 
-      {/* Mobile visual */}
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.8 }}
-        className="shell relative z-10 pb-16 lg:hidden"
+        transition={{ delay: 0.3, duration: 0.8 }}
+        className="shell relative z-10 pb-14 lg:hidden"
       >
-        <div className="glass h-[380px] overflow-hidden rounded-[1.75rem]">
+        <div className="h-[400px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02]">
           <HeroVisual />
         </div>
       </motion.div>
