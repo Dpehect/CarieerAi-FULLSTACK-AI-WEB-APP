@@ -67,7 +67,7 @@ body {
   }
 
   .btn-line {
-    @apply btn border border-white/12 bg-white/[0.03] text-white/90
+    @apply btn border border-white/10 bg-white/[0.03] text-white/90
       hover:border-aqua/40 hover:bg-white/[0.06];
   }
 }
