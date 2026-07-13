@@ -10,16 +10,16 @@ export default {
       },
       colors: {
         night: {
-          950: "#02040a",
-          900: "#050a14",
-          800: "#0a1020",
-          700: "#111a2e",
-          600: "#1a2540",
+          950: "#0b1220",
+          900: "#101a2e",
+          800: "#162238",
+          700: "#1e2d48",
+          600: "#2a3d5c",
         },
-        ice: "#7dd3fc",
         aqua: "#22d3ee",
-        orchid: "#c084fc",
+        ice: "#a5f3fc",
         plum: "#a855f7",
+        orchid: "#d8b4fe",
       },
       maxWidth: {
         content: "72rem",
@@ -28,23 +28,8 @@ export default {
         display: "-0.04em",
       },
       boxShadow: {
-        float: "0 30px 80px rgba(0,0,0,0.55)",
-        "glow-aqua": "0 0 60px rgba(34,211,238,0.2)",
-        "glow-plum": "0 0 60px rgba(168,85,247,0.18)",
-      },
-      keyframes: {
-        drift: {
-          "0%, 100%": { transform: "translate(0,0)" },
-          "50%": { transform: "translate(12px,-18px)" },
-        },
-        floaty: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-14px)" },
-        },
-      },
-      animation: {
-        drift: "drift 14s ease-in-out infinite",
-        floaty: "floaty 7s ease-in-out infinite",
+        float: "0 28px 70px rgba(8, 15, 35, 0.45)",
+        glow: "0 0 80px rgba(34, 211, 238, 0.25)",
       },
     },
   },

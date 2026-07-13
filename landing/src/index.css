@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Avoid Tailwind @apply with slash opacity (breaks Vercel PostCSS on some versions). */
+
 :root {
   color-scheme: dark;
+  --bg: #0b1220;
+  --bg-elevated: #121a2b;
+  --fg: #f1f5f9;
+  --muted: #94a3b8;
+  --aqua: #22d3ee;
+  --plum: #a855f7;
+  --line: rgba(255, 255, 255, 0.12);
 }
 
 html {
@@ -13,61 +22,105 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: #02040a;
-  color: #f8fafc;
+  background: var(--bg);
+  color: var(--fg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
 ::selection {
-  background: rgba(34, 211, 238, 0.28);
+  background: rgba(34, 211, 238, 0.32);
   color: #fff;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1220;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#22d3ee66, #a855f766);
+  background: linear-gradient(180deg, #22d3ee88, #a855f788);
   border-radius: 99px;
 }
 
-@layer utilities {
-  .text-shine {
-    background: linear-gradient(
-      105deg,
-      #e2e8f0 0%,
-      #22d3ee 35%,
-      #f8fafc 50%,
-      #c084fc 70%,
-      #e2e8f0 100%
-    );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+.text-shine {
+  background: linear-gradient(
+    110deg,
+    #ffffff 0%,
+    #67e8f9 28%,
+    #ffffff 50%,
+    #d8b4fe 72%,
+    #ffffff 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .shell {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
-@layer components {
-  .shell {
-    @apply mx-auto w-full max-w-content px-5 sm:px-8;
-  }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease,
+    border-color 0.25s ease;
+}
 
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3
-      text-[13px] font-semibold tracking-tight transition duration-300
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua/40;
-  }
+.btn:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 2px;
+}
 
-  .btn-solid {
-    @apply btn bg-white text-night-950 shadow-[0_1px_0_rgba(255,255,255,0.35)_inset,0_10px_40px_rgba(34,211,238,0.22)]
-      hover:shadow-[0_1px_0_rgba(255,255,255,0.45)_inset,0_14px_50px_rgba(168,85,247,0.25)];
-  }
+.btn-solid {
+  background: linear-gradient(105deg, #ffffff 0%, #e0f2fe 45%, #f3e8ff 100%);
+  color: #0b1220;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 12px 40px rgba(34, 211, 238, 0.28), 0 8px 24px rgba(168, 85, 247, 0.18);
+}
 
-  .btn-line {
-    @apply btn border border-white/10 bg-white/[0.03] text-white/90
-      hover:border-aqua/40 hover:bg-white/[0.06];
-  }
+.btn-solid:hover {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 16px 50px rgba(34, 211, 238, 0.35), 0 10px 30px rgba(168, 85, 247, 0.25);
+}
+
+.btn-line {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+.btn-line:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.glass {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }

@@ -4,7 +4,7 @@ export function BrandLogo({ className = "", size = 30, wordmark = true }: Props)
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <svg width={size} height={size} viewBox="0 0 36 36" fill="none" aria-hidden>
-        <rect width="36" height="36" rx="11" fill="#0a1020" />
+        <rect width="36" height="36" rx="11" fill="#162238" />
         <rect
           x="0.5"
           y="0.5"
