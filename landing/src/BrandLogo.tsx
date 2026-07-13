@@ -1,14 +1,11 @@
-/**
- * Pathora mark — refined monogram: ascending path + node.
- * Quiet luxury, not neon cyberpunk.
- */
 type Props = {
   className?: string;
   showWordmark?: boolean;
   size?: number;
 };
 
-export function BrandLogo({ className = "", showWordmark = true, size = 28 }: Props) {
+/** Pathora mark — teal → violet path monogram. */
+export function BrandLogo({ className = "", showWordmark = true, size = 32 }: Props) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <svg
@@ -18,32 +15,29 @@ export function BrandLogo({ className = "", showWordmark = true, size = 28 }: Pr
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden
-        className="shrink-0"
+        className="shrink-0 drop-shadow-[0_0_12px_rgba(34,211,238,0.35)]"
       >
-        <rect width="40" height="40" rx="10" fill="#121820" />
-        <rect
-          x="0.5"
-          y="0.5"
-          width="39"
-          height="39"
-          rx="9.5"
-          stroke="rgba(255,255,255,0.08)"
-        />
-        {/* Path */}
+        <defs>
+          <linearGradient id="pl" x1="8" y1="30" x2="32" y2="10" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#22d3ee" />
+            <stop offset="1" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="12" fill="#0a1220" />
+        <rect x="0.5" y="0.5" width="39" height="39" rx="11.5" stroke="url(#pl)" strokeOpacity="0.45" />
         <path
-          d="M10 27c4 0 5.5-5 9-8s5-5 10-8"
-          stroke="#9eb0ff"
-          strokeWidth="1.75"
+          d="M11 28c3.5 0 5-5.5 8.5-9S25 12 30 10"
+          stroke="url(#pl)"
+          strokeWidth="2.2"
           strokeLinecap="round"
         />
-        <circle cx="11" cy="27" r="2" fill="#6b8cff" opacity="0.9" />
-        <circle cx="19.5" cy="18.5" r="2.25" fill="#8aa4ff" />
-        <circle cx="29.5" cy="11" r="2.75" fill="#c5d0ff" />
+        <circle cx="12" cy="28" r="2.2" fill="#22d3ee" />
+        <circle cx="20" cy="18.5" r="2.5" fill="#67e8f9" />
+        <circle cx="30" cy="10" r="3" fill="#a855f7" />
       </svg>
-
       {showWordmark ? (
-        <span className="font-display text-[15px] font-semibold tracking-[-0.03em] text-white/95">
-          Pathora
+        <span className="font-display text-[15px] font-semibold tracking-tight text-white">
+          Path<span className="gradient-text">ora</span>
         </span>
       ) : null}
     </span>

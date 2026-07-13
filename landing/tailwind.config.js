@@ -9,40 +9,49 @@ export default {
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       colors: {
-        surface: {
-          0: "#07090d",
-          50: "#0b0f14",
-          100: "#10161e",
-          200: "#161d28",
-          300: "#1c2533",
-          400: "#243041",
+        void: {
+          950: "#03050a",
+          900: "#060a12",
+          800: "#0a1220",
+          700: "#101a2e",
+          600: "#162238",
         },
-        ink: {
-          soft: "#8b95a8",
-          muted: "#6b7589",
-          faint: "#4a5366",
+        teal: {
+          glow: "#22d3ee",
+          soft: "#67e8f9",
         },
-        accent: {
-          DEFAULT: "#6b8cff",
-          soft: "#8aa4ff",
-          deep: "#4f6fe0",
-          glow: "rgba(107, 140, 255, 0.18)",
+        violet: {
+          glow: "#a855f7",
+          soft: "#c084fc",
         },
       },
       boxShadow: {
-        elevate: "0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 50px rgba(0,0,0,0.45)",
-        soft: "0 12px 40px rgba(0,0,0,0.35)",
-        ring: "0 0 0 1px rgba(255,255,255,0.06)",
-      },
-      letterSpacing: {
-        tighter2: "-0.04em",
+        "glow-teal": "0 0 40px rgba(34, 211, 238, 0.25)",
+        "glow-violet": "0 0 40px rgba(168, 85, 247, 0.22)",
+        "glow-cta":
+          "0 0 0 1px rgba(255,255,255,0.08), 0 12px 40px rgba(34, 211, 238, 0.25), 0 8px 24px rgba(168, 85, 247, 0.15)",
+        card: "0 24px 60px rgba(0,0,0,0.45)",
       },
       backgroundImage: {
-        "dot-grid":
-          "radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)",
+        "mesh":
+          "radial-gradient(at 20% 20%, rgba(34,211,238,0.12) 0, transparent 45%), radial-gradient(at 80% 10%, rgba(168,85,247,0.14) 0, transparent 40%), radial-gradient(at 50% 90%, rgba(34,211,238,0.08) 0, transparent 45%)",
       },
-      backgroundSize: {
-        dots: "24px 24px",
+      letterSpacing: {
+        tightest: "-0.045em",
+      },
+      keyframes: {
+        shimmer: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "100% 50%" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "0.45" },
+          "50%": { opacity: "0.85" },
+        },
+      },
+      animation: {
+        shimmer: "shimmer 4s ease infinite",
+        pulseGlow: "pulseGlow 4s ease-in-out infinite",
       },
     },
   },

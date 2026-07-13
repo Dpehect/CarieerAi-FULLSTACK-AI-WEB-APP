@@ -1,113 +1,123 @@
 /**
- * Subtle spatial field — soft nodes & restrained links.
- * Apple / Linear energy: quiet depth, not rave lighting.
+ * Hero 3D — glowing AI orb + neural lattice.
+ * Scroll-driven rotation via parent-set CSS is optional; self-animates gently.
  */
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Line, Sphere } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
-function Field() {
-  const group = useRef<THREE.Group>(null);
+type Props = {
+  /** 0–1 scroll influence for extra tilt */
+  scroll?: number;
+};
+
+function OrbSystem({ scroll = 0 }: Props) {
+  const root = useRef<THREE.Group>(null);
+  const core = useRef<THREE.Mesh>(null);
 
   const nodes = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    const n = 18;
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      const r = 1.1 + (i % 4) * 0.22;
-      pts.push(
+    const arr: THREE.Vector3[] = [];
+    for (let i = 0; i < 26; i++) {
+      const t = (i / 26) * Math.PI * 2;
+      const r = 1.25 + (i % 5) * 0.18;
+      arr.push(
         new THREE.Vector3(
-          Math.cos(a) * r * 0.95,
-          Math.sin(i * 0.7) * 0.55,
-          Math.sin(a) * r * 0.5
+          Math.cos(t) * r,
+          Math.sin(i * 0.85) * 0.75,
+          Math.sin(t) * r * 0.65
         )
       );
     }
-    return pts;
+    return arr;
   }, []);
 
   const links = useMemo(() => {
     const segs: [THREE.Vector3, THREE.Vector3][] = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        if (nodes[i].distanceTo(nodes[j]) < 1.35) {
-          segs.push([nodes[i], nodes[j]]);
-        }
+        if (nodes[i].distanceTo(nodes[j]) < 1.45) segs.push([nodes[i], nodes[j]]);
       }
     }
     return segs;
   }, [nodes]);
 
   useFrame((state) => {
-    if (!group.current) return;
     const t = state.clock.getElapsedTime();
-    group.current.rotation.y = t * 0.06;
-    group.current.rotation.x = Math.sin(t * 0.12) * 0.05;
+    if (root.current) {
+      root.current.rotation.y = t * 0.18 + scroll * 0.8;
+      root.current.rotation.x = Math.sin(t * 0.25) * 0.12 + scroll * 0.25;
+    }
+    if (core.current) {
+      const s = 1 + Math.sin(t * 1.4) * 0.04;
+      core.current.scale.setScalar(s);
+    }
   });
 
   return (
-    <group ref={group} position={[0.15, 0.05, 0]}>
+    <group ref={root}>
       {links.map((seg, i) => (
         <Line
           key={i}
           points={seg}
-          color="#6b8cff"
-          lineWidth={0.8}
+          color={i % 2 ? "#a855f7" : "#22d3ee"}
+          lineWidth={1}
           transparent
-          opacity={0.14}
+          opacity={0.28}
         />
       ))}
       {nodes.map((p, i) => (
-        <Float key={i} speed={0.8 + (i % 3) * 0.15} floatIntensity={0.25} rotationIntensity={0.1}>
-          <Sphere args={[0.035 + (i % 3) * 0.008, 24, 24]} position={p.toArray()}>
+        <Float key={i} speed={1 + (i % 4) * 0.15} floatIntensity={0.35} rotationIntensity={0.15}>
+          <Sphere args={[0.045 + (i % 3) * 0.01, 20, 20]} position={p.toArray()}>
             <meshStandardMaterial
-              color={i % 4 === 0 ? "#c5d0ff" : "#8aa4ff"}
-              emissive="#4f6fe0"
-              emissiveIntensity={0.25}
-              roughness={0.35}
-              metalness={0.15}
+              color={i % 2 ? "#c084fc" : "#67e8f9"}
+              emissive={i % 2 ? "#a855f7" : "#22d3ee"}
+              emissiveIntensity={0.7}
+              roughness={0.25}
+              metalness={0.35}
             />
           </Sphere>
         </Float>
       ))}
-      <Float speed={1} floatIntensity={0.2}>
-        <Sphere args={[0.22, 48, 48]}>
+      <Float speed={1.2} floatIntensity={0.35}>
+        <Sphere ref={core} args={[0.32, 64, 64]}>
           <meshStandardMaterial
-            color="#a8b8ff"
-            emissive="#3d5ccc"
-            emissiveIntensity={0.35}
-            roughness={0.28}
-            metalness={0.2}
+            color="#e0f2fe"
+            emissive="#22d3ee"
+            emissiveIntensity={0.55}
+            roughness={0.18}
+            metalness={0.45}
             transparent
-            opacity={0.88}
+            opacity={0.92}
           />
         </Sphere>
-        <Sphere args={[0.38, 32, 32]}>
-          <meshBasicMaterial color="#6b8cff" transparent opacity={0.04} />
+        <Sphere args={[0.48, 32, 32]}>
+          <meshBasicMaterial color="#a855f7" transparent opacity={0.08} />
+        </Sphere>
+        <Sphere args={[0.62, 32, 32]}>
+          <meshBasicMaterial color="#22d3ee" transparent opacity={0.05} />
         </Sphere>
       </Float>
     </group>
   );
 }
 
-export function NeuralScene() {
+export function NeuralScene({ scroll = 0 }: Props) {
   return (
     <div className="absolute inset-0">
       <Canvas
-        dpr={[1, 1.5]}
-        camera={{ position: [0, 0.15, 4.6], fov: 38 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        dpr={[1, 1.75]}
+        camera={{ position: [0, 0.2, 4.8], fov: 40 }}
+        gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[3, 4, 2]} intensity={0.65} color="#dfe6ff" />
-        <pointLight position={[-2, -1, 2]} intensity={0.25} color="#6b8cff" />
-        <Field />
+        <ambientLight intensity={0.35} />
+        <pointLight position={[3, 2, 4]} intensity={1.1} color="#22d3ee" />
+        <pointLight position={[-3, -1, 2]} intensity={0.8} color="#a855f7" />
+        <OrbSystem scroll={scroll} />
       </Canvas>
-      {/* Readability veils */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-surface-0 via-surface-0/55 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-0 via-transparent to-surface-0/50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void-950 via-void-950/50 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void-950 via-transparent to-void-950/40" />
     </div>
   );
 }
