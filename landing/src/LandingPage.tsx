@@ -1,662 +1,320 @@
-/**
- * Pathora Landing — product page
- * Lighter dark palette · heavy Framer Motion · creative path-map hero
- * (no spinning 3D orb)
- *
- * Build-safe CSS: no fragile Tailwind @apply opacity utilities.
- */
-import {
-  AnimatePresence,
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-  useScroll,
-  useSpring,
-  useTransform,
-  type MotionValue,
-} from "framer-motion";
-import {
-  useRef,
-  useState,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
-import { BrandLogo } from "./BrandLogo";
-import { HeroVisual } from "./HeroVisual";
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { MeshDistortMaterial, Float, Stars } from '@react-three/drei';
+import * as THREE from 'three';
 
-const REPO = "https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP";
+// --- 3D Elements ---
 
-const FEATURES = [
-  {
-    title: "ATS in milliseconds",
-    body: "Local keyword & structure scoring before any model call—instant signal.",
-    wide: true,
-  },
-  {
-    title: "Grounded RAG",
-    body: "ChromaDB retrieval keeps every recommendation tied to your documents.",
-  },
-  {
-    title: "Gap intelligence",
-    body: "Prioritized skill gaps with severity and a clear close-the-gap path.",
-  },
-  {
-    title: "Letters & LinkedIn",
-    body: "Drafts that read like you—not a template farm.",
-    wide: true,
-  },
-  {
-    title: "Export suite",
-    body: "Markdown + print-ready HTML. PDF in one browser print.",
-  },
-  {
-    title: "Private by default",
-    body: "Ollama on localhost. No API keys. Data stays on disk.",
-  },
-] as const;
-
-const STEPS = [
-  { id: "01", title: "Bootstrap", text: "One installer. Models included." },
-  { id: "02", title: "Open", text: "Streamlit UI on localhost." },
-  { id: "03", title: "Index", text: "CV + job as PDF or text." },
-  { id: "04", title: "Decide", text: "Score, plan, draft, export." },
-] as const;
-
-const EASE = [0.16, 1, 0.3, 1] as const;
-
-/* ─── motion primitives ─────────────────────────────────────────────────── */
-
-function Reveal({
-  children,
-  className = "",
-  delay = 0,
-  y = 40,
-}: {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  y?: number;
-}) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y, filter: "blur(8px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.9, delay, ease: EASE }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Magnetic({
-  children,
-  className,
-  href,
-  onClick,
-}: {
-  children: ReactNode;
-  className?: string;
-  href?: string;
-  onClick?: () => void;
-}) {
-  const ref = useRef<HTMLElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 300, damping: 18, mass: 0.3 });
-  const sy = useSpring(y, { stiffness: 300, damping: 18, mass: 0.3 });
-
-  const move = (e: MouseEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    x.set((e.clientX - r.left - r.width / 2) * 0.28);
-    y.set((e.clientY - r.top - r.height / 2) * 0.28);
-  };
-  const leave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const shared = {
-    onMouseMove: move,
-    onMouseLeave: leave,
-    style: { x: sx, y: sy },
-    whileHover: { scale: 1.04 },
-    whileTap: { scale: 0.97 },
-    className,
-  };
-
-  if (href) {
-    return (
-      <motion.a
-        ref={ref as React.RefObject<HTMLAnchorElement>}
-        href={href}
-        target={href.startsWith("http") ? "_blank" : undefined}
-        rel={href.startsWith("http") ? "noreferrer" : undefined}
-        {...shared}
-      >
-        {children}
-      </motion.a>
-    );
-  }
-  return (
-    <motion.button
-      ref={ref as React.RefObject<HTMLButtonElement>}
-      type="button"
-      onClick={onClick}
-      {...shared}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-function TiltCard({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0.5);
-  const my = useMotionValue(0.5);
-  const rx = useSpring(useTransform(my, [0, 1], [11, -11]), { stiffness: 200, damping: 18 });
-  const ry = useSpring(useTransform(mx, [0, 1], [-14, 14]), { stiffness: 200, damping: 18 });
-  const px = useTransform(mx, (v) => `${v * 100}%`);
-  const py = useTransform(my, (v) => `${v * 100}%`);
-  const glow = useMotionTemplate`radial-gradient(500px circle at ${px} ${py}, rgba(34,211,238,0.22), rgba(168,85,247,0.12) 40%, transparent 65%)`;
+const AbstractOrb = () => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.1;
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.15;
+    }
+  });
 
   return (
-    <Reveal delay={delay} className={`h-full [perspective:1400px] ${className}`}>
-      <motion.div
-        ref={ref}
-        onMouseMove={(e) => {
-          const el = ref.current;
-          if (!el) return;
-          const r = el.getBoundingClientRect();
-          mx.set((e.clientX - r.left) / r.width);
-          my.set((e.clientY - r.top) / r.height);
-        }}
-        onMouseLeave={() => {
-          mx.set(0.5);
-          my.set(0.5);
-        }}
-        style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
-        whileHover={{ scale: 1.035, z: 48 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="glass relative h-full overflow-hidden rounded-[1.4rem] shadow-float"
-      >
-        <motion.div className="pointer-events-none absolute inset-0" style={{ backgroundImage: glow }} />
-        <div className="relative h-full p-6 sm:p-7" style={{ transform: "translateZ(32px)" }}>
-          {children}
-        </div>
-      </motion.div>
-    </Reveal>
-  );
-}
-
-/* ─── chrome ─────────────────────────────────────────────────────────────── */
-
-function Progress({ p }: { p: MotionValue<number> }) {
-  const scaleX = useSpring(p, { stiffness: 100, damping: 28 });
-  return (
-    <motion.div
-      className="fixed inset-x-0 top-0 z-[90] h-[2px] origin-left bg-gradient-to-r from-aqua via-white to-plum"
-      style={{ scaleX }}
-    />
-  );
-}
-
-function Nav() {
-  const { scrollY } = useScroll();
-  const bg = useTransform(scrollY, [0, 50], ["rgba(11,18,32,0)", "rgba(11,18,32,0.82)"]);
-  const border = useTransform(scrollY, [0, 50], [0, 1]);
-
-  return (
-    <motion.header
-      style={{ backgroundColor: bg }}
-      className="fixed inset-x-0 top-0 z-50 backdrop-blur-xl"
-      initial={{ y: -30, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.75, ease: EASE }}
-    >
-      <motion.div
-        className="absolute inset-x-0 bottom-0 h-px bg-white/15"
-        style={{ opacity: border }}
-      />
-      <div className="shell flex h-[4.25rem] items-center justify-between">
-        <motion.a href="#top" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-          <BrandLogo />
-        </motion.a>
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 gap-9 text-[13px] text-white/65 md:flex">
-          {[
-            ["Product", "#product"],
-            ["Process", "#process"],
-            ["Start", "#start"],
-          ].map(([label, href], i) => (
-            <motion.a
-              key={href}
-              href={href}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 + i * 0.06 }}
-              whileHover={{ color: "#fff", y: -1 }}
-              className="transition"
-            >
-              {label}
-            </motion.a>
-          ))}
-        </nav>
-        <div className="flex gap-2">
-          <Magnetic href={REPO} className="btn btn-line !px-4 !py-2 text-xs">
-            GitHub
-          </Magnetic>
-          <Magnetic href="#start" className="btn btn-solid !px-4 !py-2 text-xs">
-            Get Pathora
-          </Magnetic>
-        </div>
-      </div>
-    </motion.header>
-  );
-}
-
-/* ─── hero ───────────────────────────────────────────────────────────────── */
-
-function Hero({ progress }: { progress: MotionValue<number> }) {
-  const yCopy = useTransform(progress, [0, 0.3], [0, -70]);
-  const yVisual = useTransform(progress, [0, 0.35], [0, 90]);
-  const opVisual = useTransform(progress, [0, 0.4], [1, 0.25]);
-
-  return (
-    <section id="top" className="relative min-h-[100svh] overflow-hidden pt-[4.25rem]">
-      {/* Atmosphere */}
-      <div className="pointer-events-none absolute inset-0">
-        <motion.div
-          className="absolute -left-24 top-16 h-[30rem] w-[30rem] rounded-full bg-aqua/25 blur-[100px]"
-          animate={{ scale: [1, 1.12, 1], x: [0, 20, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    <Float speed={2} rotationIntensity={0.5} floatIntensity={2}>
+      <mesh ref={meshRef} scale={1.2}>
+        <icosahedronGeometry args={[1.5, 4]} />
+        <MeshDistortMaterial 
+          color="#22d3ee" 
+          emissive="#a855f7" 
+          emissiveIntensity={0.4} 
+          wireframe={true} 
+          distort={0.3} 
+          speed={2} 
+          roughness={0.2}
+          transparent
+          opacity={0.8}
         />
-        <motion.div
-          className="absolute -right-16 top-8 h-[34rem] w-[34rem] rounded-full bg-plum/25 blur-[110px]"
-          animate={{ scale: [1.08, 1, 1.08], y: [0, 24, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div
-          className="absolute inset-0 opacity-35"
-          style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
-            backgroundSize: "26px 26px",
-            maskImage: "radial-gradient(ellipse at 40% 40%, black 15%, transparent 70%)",
-          }}
-        />
-      </div>
-
-      <div className="shell relative z-10 grid min-h-[calc(100svh-4.25rem)] items-center gap-10 py-16 lg:grid-cols-2 lg:gap-8">
-        <motion.div style={{ y: yCopy }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 14 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: EASE }}
-            className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[12px] text-white/80 backdrop-blur"
-          >
-            <motion.span
-              className="h-2 w-2 rounded-full bg-aqua"
-              animate={{ scale: [1, 1.35, 1], opacity: [1, 0.55, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-            On-device AI · Zero API keys
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 48 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.06, ease: EASE }}
-            className="font-display text-[2.75rem] font-semibold leading-[1.02] tracking-display text-white sm:text-5xl lg:text-6xl"
-          >
-            Clarity for every
-            <br />
-            <span className="text-shine">career decision.</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.16, ease: EASE }}
-            className="mt-6 max-w-md text-[15px] leading-relaxed text-white/65 sm:text-base"
-          >
-            Pathora is local career intelligence—ATS scoring, skill gaps, roadmaps,
-            and drafts—running privately with Ollama. No cloud keys. No data leaks.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.85, delay: 0.26, ease: EASE }}
-            className="mt-9 flex flex-wrap gap-3"
-          >
-            <Magnetic href="#start" className="btn btn-solid">
-              Start free
-              <motion.span
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
-              >
-                →
-              </motion.span>
-            </Magnetic>
-            <Magnetic href="#product" className="btn btn-line">
-              Explore product
-            </Magnetic>
-          </motion.div>
-
-          <motion.div
-            className="mt-14 grid grid-cols-3 gap-4 border-t border-white/12 pt-8 sm:max-w-md"
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.09, delayChildren: 0.4 } },
-            }}
-          >
-            {[
-              ["0", "API keys"],
-              ["100%", "On-device"],
-              ["Local", "Private"],
-            ].map(([k, v]) => (
-              <motion.div
-                key={v}
-                variants={{
-                  hidden: { opacity: 0, y: 18 },
-                  show: { opacity: 1, y: 0, transition: { ease: EASE } },
-                }}
-                className="rounded-2xl border border-white/12 bg-white/8 px-3 py-3 backdrop-blur-sm"
-              >
-                <div className="font-display text-lg font-semibold text-white">{k}</div>
-                <div className="text-[11px] text-white/50">{v}</div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        {/* Product stage — quiet, premium motion */}
-        <motion.div
-          style={{ y: yVisual, opacity: opVisual }}
-          initial={{ opacity: 0, x: 28 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.18, ease: EASE }}
-          className="relative hidden h-[min(500px,68vh)] lg:block"
-        >
-          <div className="absolute inset-0 overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02]">
-            <HeroVisual />
-          </div>
-        </motion.div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-        className="shell relative z-10 pb-14 lg:hidden"
-      >
-        <div className="h-[400px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02]">
-          <HeroVisual />
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.15 }}
-      >
-        <span className="text-[10px] uppercase tracking-[0.28em] text-white/40">Scroll</span>
-        <motion.div
-          className="h-10 w-px origin-top bg-gradient-to-b from-aqua to-transparent"
-          animate={{ scaleY: [0.45, 1, 0.45], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.85, repeat: Infinity }}
-        />
-      </motion.div>
-    </section>
+      </mesh>
+    </Float>
   );
-}
+};
 
-/* ─── sections ───────────────────────────────────────────────────────────── */
-
-function Product() {
+const Scene3D = () => {
   return (
-    <section id="product" className="relative py-28 sm:py-32">
-      <div className="shell">
-        <Reveal className="max-w-2xl">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-aqua">
-            Product
-          </p>
-          <h2 className="font-display text-3xl font-semibold tracking-display text-white sm:text-5xl">
-            A composed system for
-            <span className="text-white/50"> serious applications.</span>
-          </h2>
-          <p className="mt-4 max-w-lg text-[15px] text-white/55">
-            Hover the panels—3D tilt, luminous trails, spring physics.
-          </p>
-        </Reveal>
-
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f, i) => (
-            <TiltCard
-              key={f.title}
-              delay={i * 0.06}
-              className={f.wide ? "sm:col-span-2 lg:col-span-1" : ""}
-            >
-              <div className="flex min-h-[150px] flex-col">
-                <motion.div
-                  className="mb-5 h-px w-12 origin-left bg-gradient-to-r from-aqua to-plum"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.1 + i * 0.04, ease: EASE }}
-                />
-                <h3 className="font-display text-lg font-semibold text-white">{f.title}</h3>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-white/55">{f.body}</p>
-              </div>
-            </TiltCard>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Process() {
-  return (
-    <section id="process" className="py-24">
-      <div className="shell">
-        <Reveal className="mb-12 max-w-xl">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-orchid">
-            Process
-          </p>
-          <h2 className="font-display text-3xl font-semibold tracking-display text-white sm:text-4xl">
-            From zero to decision in four beats.
-          </h2>
-        </Reveal>
-        <div className="relative grid gap-3 md:grid-cols-4">
-          <div className="pointer-events-none absolute left-[6%] right-[6%] top-8 hidden h-px bg-gradient-to-r from-transparent via-white/20 to-transparent md:block" />
-          {STEPS.map((s, i) => (
-            <Reveal key={s.id} delay={i * 0.08}>
-              <motion.article
-                whileHover={{ y: -10, borderColor: "rgba(34,211,238,0.4)" }}
-                transition={{ type: "spring", stiffness: 320, damping: 22 }}
-                className="glass rounded-2xl p-5"
-              >
-                <span className="font-mono text-[11px] text-aqua">{s.id}</span>
-                <h3 className="mt-3 font-display text-xl font-semibold text-white">{s.title}</h3>
-                <p className="mt-2 text-sm text-white/50">{s.text}</p>
-              </motion.article>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Marquee() {
-  const items = [
-    "Ollama",
-    "Framer Motion",
-    "Path map UI",
-    "Local AI",
-    "ChromaDB",
-    "Streamlit",
-    "Local-first",
-    "No API keys",
-  ];
-  const row = [...items, ...items];
-  return (
-    <div className="relative overflow-hidden border-y border-white/12 bg-white/5 py-5">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-28 bg-gradient-to-r from-night-950 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-28 bg-gradient-to-l from-night-950 to-transparent" />
-      <motion.div
-        className="flex w-max gap-10"
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-      >
-        {row.map((t, i) => (
-          <span
-            key={`${t}-${i}`}
-            className="font-mono text-xs uppercase tracking-[0.22em] text-white/45"
-          >
-            {t}
-            <span className="ml-10 text-aqua/50">◆</span>
-          </span>
-        ))}
-      </motion.div>
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+      <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <pointLight position={[-10, -10, -10]} color="#a855f7" intensity={2} />
+        <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
+        <group position={[3, 0, -2]}>
+          <AbstractOrb />
+        </group>
+      </Canvas>
     </div>
   );
-}
+};
 
-function Start() {
-  const [copied, setCopied] = useState(false);
-  const cmd = `git clone ${REPO}`;
+// --- SVG Icons ---
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(cmd);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* ignore */
-    }
-  };
+const IconATS = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+);
+
+const IconPrivacy = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+);
+
+const IconRadar = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle><line x1="12" y1="12" x2="19" y2="12"></line></svg>
+);
+
+// --- Components ---
+
+const Navbar = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <section id="start" className="py-28">
-      <div className="shell">
-        <Reveal>
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 200, damping: 22 }}
-            className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-br from-night-700 via-night-800 to-night-900 p-8 shadow-glow sm:p-14"
-          >
-            <motion.div
-              className="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-aqua/30 blur-3xl"
-              animate={{ x: [0, 24, 0], y: [0, 16, 0] }}
-              transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="pointer-events-none absolute -bottom-20 -left-12 h-96 w-96 rounded-full bg-plum/25 blur-3xl"
-              animate={{ x: [0, -18, 0], y: [0, -12, 0] }}
-              transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
-            />
+    <motion.nav 
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0b1220]/80 backdrop-blur-lg border-b border-white/5 shadow-2xl' : 'bg-transparent'}`}
+    >
+      <div className="shell flex items-center justify-between h-20">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-aqua to-plum p-[1px]">
+            <div className="w-full h-full bg-[#0b1220] rounded-[11px] flex items-center justify-center">
+               <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+            </div>
+          </div>
+          <span className="font-display font-bold text-2xl tracking-tight text-white">Pathora</span>
+        </div>
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
+          <a href="#features" className="hover:text-aqua transition-colors duration-300">Architecture</a>
+          <a href="#technology" className="hover:text-aqua transition-colors duration-300">Engine</a>
+          <a href="#security" className="hover:text-aqua transition-colors duration-300">Security</a>
+        </div>
+        <div>
+          <button className="btn btn-solid">
+            Launch Platform
+          </button>
+        </div>
+      </div>
+    </motion.nav>
+  );
+};
 
-            <div className="relative max-w-xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-aqua">
-                Get started
-              </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold tracking-display text-white sm:text-5xl">
-                Install once.
-                <br />
-                <span className="text-shine">Ship your next application.</span>
-              </h2>
-              <p className="mt-4 text-[15px] text-white/60">
-                This site is the brochure. Pathora runs on your computer.
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <Magnetic href={REPO} className="btn btn-solid">
-                  Open GitHub
-                </Magnetic>
-                <Magnetic onClick={copy} className="btn btn-line min-w-[12rem]">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
-                      key={copied ? "y" : "n"}
-                      initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {copied ? "Copied" : "Copy clone command"}
-                    </motion.span>
-                  </AnimatePresence>
-                </Magnetic>
-              </div>
-              <pre className="mt-8 overflow-x-auto rounded-2xl border border-white/12 bg-black/30 p-4 font-mono text-[12px] leading-relaxed text-ice">
-                {`${cmd}
-cd CarieerAi-FULLSTACK-AI-WEB-APP
-setup.bat
-start.bat
-# → http://localhost:8501`}
-              </pre>
+const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-100px" }}
+    transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+    whileHover={{ y: -8, scale: 1.02 }}
+    className="relative group rounded-[2rem] p-[1px] bg-gradient-to-b from-white/10 to-transparent overflow-hidden"
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-aqua/20 to-plum/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl" />
+    <div className="relative h-full bg-[#0d1627]/95 backdrop-blur-xl rounded-[31px] p-10 flex flex-col gap-5 border border-white/5 shadow-2xl">
+      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-aqua border border-white/10 group-hover:border-aqua/50 transition-colors duration-500 shadow-glow">
+        {icon}
+      </div>
+      <h3 className="font-display font-bold text-2xl text-white tracking-tight">{title}</h3>
+      <p className="text-muted leading-relaxed text-base">
+        {description}
+      </p>
+    </div>
+  </motion.div>
+);
+
+export default function LandingPage() {
+  const { scrollYProgress } = useScroll();
+  const yParallax = useTransform(scrollYProgress, [0, 1], [0, 400]);
+
+  return (
+    <div className="min-h-screen bg-[#0b1220] text-white selection:bg-aqua/30 overflow-hidden font-sans">
+      <Navbar />
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+        <Scene3D />
+        
+        {/* Deep ambient glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-aqua/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-plum/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+        
+        <div className="shell relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            className="flex flex-col gap-8"
+          >
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 w-fit backdrop-blur-md shadow-xl">
+              <span className="w-2.5 h-2.5 rounded-full bg-aqua animate-pulse shadow-[0_0_10px_#22d3ee]" />
+              <span className="text-xs font-mono text-aqua font-semibold tracking-widest uppercase">System Core v2.0</span>
+            </div>
+            
+            <h1 className="font-display text-5xl md:text-7xl lg:text-[5rem] font-bold leading-[1.05] tracking-display text-white">
+              Career Logic, <br />
+              <span className="text-shine">Engineered.</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted max-w-xl leading-relaxed font-light">
+              Pathora combines advanced RAG architecture with local Large Language Models to deliver real-time ATS scoring—without ever exposing your data to the cloud.
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-5 pt-4">
+              <button className="btn btn-solid px-8 py-4 text-base shadow-glow hover:scale-105">
+                Download for Windows
+              </button>
+              <button className="btn btn-line px-8 py-4 text-base group backdrop-blur-md">
+                Explore Architecture
+                <span className="inline-block transition-transform group-hover:translate-x-2 ml-2">→</span>
+              </button>
             </div>
           </motion.div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-white/12 py-10">
-      <div className="shell flex flex-col items-center justify-between gap-5 sm:flex-row">
-        <div className="flex items-center gap-3">
-          <BrandLogo size={28} />
-          <span className="text-[13px] text-white/45">Local AI career intelligence</span>
         </div>
-        <div className="flex gap-6 text-[13px] text-white/45">
-          <a className="hover:text-white" href={REPO} target="_blank" rel="noreferrer">
-            GitHub
-          </a>
-          <a className="hover:text-white" href="#product">
-            Product
-          </a>
-          <a className="hover:text-white" href="#start">
-            Start
-          </a>
+      </section>
+
+      {/* Capabilities Section */}
+      <section id="features" className="relative py-40 z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#101a2e]/60 to-transparent skew-y-[-2deg] transform origin-top-left -z-10 border-y border-white/5" />
+        <div className="shell relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-3xl mx-auto mb-24"
+          >
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-6 tracking-tight">Built for the <span className="text-shine">Modern Elite</span></h2>
+            <p className="text-muted text-lg font-light">Sophisticated algorithms analyze your professional footprint against market demands, running completely on local silicon for ultimate zero-trust privacy.</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <FeatureCard 
+              delay={0.1}
+              icon={<IconATS />}
+              title="Instant ATS Analytics"
+              description="Algorithmic scoring matches your CV with job descriptions in milliseconds. Identify critical missing keywords dynamically before submission."
+            />
+            <FeatureCard 
+              delay={0.2}
+              icon={<IconRadar />}
+              title="RAG-Powered Insights"
+              description="Vector embeddings and ChromaDB ensure the inference engine understands the deep semantic context of your career history."
+            />
+            <FeatureCard 
+              delay={0.3}
+              icon={<IconPrivacy />}
+              title="Air-gapped Security"
+              description="Zero API endpoints. Your PII never leaves your workstation. Pathora runs Llama 3.1 entirely on-premise for enterprise-grade confidentiality."
+            />
+          </div>
         </div>
-      </div>
-    </footer>
-  );
-}
+      </section>
 
-/* ─── page ───────────────────────────────────────────────────────────────── */
+      {/* Parallax Showcase Section */}
+      <section className="relative py-40 overflow-hidden">
+        <motion.div style={{ y: yParallax }} className="absolute inset-0 opacity-40 z-0 pointer-events-none">
+           <div className="w-full h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-plum/10 via-[#0b1220] to-[#0b1220]" />
+        </motion.div>
 
-export function LandingPage() {
-  const { scrollYProgress } = useScroll();
+        <div className="shell relative z-10 flex flex-col lg:flex-row items-center gap-20">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
+            whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, type: "spring", bounce: 0.4 }}
+            className="w-full lg:w-1/2 relative perspective-1000"
+          >
+            <div className="absolute inset-0 bg-aqua blur-[120px] opacity-20 rounded-full mix-blend-screen" />
+            <div className="relative rounded-3xl border border-white/10 bg-[#0d1525]/90 backdrop-blur-xl overflow-hidden shadow-2xl transform-gpu">
+              <div className="h-10 border-b border-white/5 bg-[#080d17] flex items-center px-5 gap-2">
+                <div className="w-3.5 h-3.5 rounded-full bg-rose-500/80 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                <div className="w-3.5 h-3.5 rounded-full bg-amber-500/80 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <div className="w-3.5 h-3.5 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              </div>
+              <div className="p-8 font-mono text-sm leading-relaxed text-aqua/90">
+                <p className="text-white/40 mb-4">// System Process: Pathora Core Inference Engine</p>
+                <p className="mb-2"><span className="text-plum">const</span> <span className="text-white">resumeScore</span> = <span className="text-aqua">await</span> <span className="text-white">engine.analyze</span>(cvData, jobDesc);</p>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="pl-4 border-l-2 border-emerald-500/30 my-4 py-2"
+                >
+                  <p className="text-emerald-400 font-bold">>> Keyword Match Precision: 94.2%</p>
+                  <p className="text-emerald-400 font-bold">>> Semantic Alignment: Optimal</p>
+                </motion.div>
+                <p className="mt-4 text-white/50 animate-pulse">Initializing personalized roadmap generation...</p>
+                <p className="text-white mt-2">Execution completed in 241ms.</p>
+              </div>
+            </div>
+          </motion.div>
+          
+          <div className="w-full lg:w-1/2">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 tracking-tight leading-[1.1]">Developer-grade <br />Career Engineering</h2>
+            <p className="text-muted text-lg mb-10 leading-relaxed font-light">
+              We didn't just build another AI wrapper. Pathora integrates a local ChromaDB vector store directly with Ollama's inference framework, providing an isolated sandbox for you to reverse-engineer HR screening parameters.
+            </p>
+            
+            <ul className="space-y-6">
+              {[
+                "Local semantic search & retrieval capabilities",
+                "Automated high-fidelity Markdown reporting",
+                "Behavioral interview stress-test simulations"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-4 text-white/90 text-lg">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-aqua/20 to-plum/20 border border-white/10 flex items-center justify-center text-aqua shadow-glow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-  return (
-    <div className="min-h-screen bg-night-950 text-white">
-      <Progress p={scrollYProgress} />
-      <Nav />
-      <main>
-        <Hero progress={scrollYProgress} />
-        <Marquee />
-        <Product />
-        <Process />
-        <Start />
-      </main>
-      <Footer />
+      {/* Final CTA Section */}
+      <section className="relative py-40">
+        <div className="shell relative z-10">
+          <div className="relative rounded-[3rem] bg-gradient-to-b from-[#121c2e] to-[#0b1220] border border-white/10 p-12 md:p-24 text-center overflow-hidden shadow-2xl">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-plum/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen" />
+            <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-aqua/10 blur-[120px] rounded-full pointer-events-none mix-blend-screen" />
+            
+            <h2 className="font-display text-5xl md:text-6xl font-bold mb-8 relative z-10 tracking-tight">
+              Ready to take control?
+            </h2>
+            <p className="text-xl text-muted font-light max-w-2xl mx-auto mb-12 relative z-10 leading-relaxed">
+              Deploy Pathora today and start analyzing your career trajectory with the raw power of localized artificial intelligence.
+            </p>
+            
+            <div className="relative z-10">
+              <button className="btn btn-solid px-12 py-5 text-lg font-bold shadow-glow hover:scale-105 transition-all">
+                Initialize Download
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-12 text-center text-muted/50 text-sm font-medium">
+        <div className="shell flex flex-col md:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} Pathora. Engineered with Precision.</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="hover:text-aqua transition-colors">Documentation</a>
+            <a href="#" className="hover:text-aqua transition-colors">Privacy</a>
+            <a href="#" className="hover:text-aqua transition-colors">GitHub</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
