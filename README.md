@@ -1,73 +1,40 @@
 # Pathora - Local AI Career Intelligence and ATS System
 
-## Proje Vizyonu ve Kapsamı
-Pathora, açık kaynaklı dil modelleri (LLM) ve vektör veritabanı teknolojileri mimarisi üzerine inşa edilmiş, tam yerel çalışan, kapalı devre bir İnsan Kaynakları zekası ve Aday Takip Sistemi (ATS) platformudur. Proje, adayların özgeçmiş verilerini ve iş ilanı metinlerini Doğal Dil İşleme (NLP) yöntemleriyle analiz ederek yetenek eşleştirmesi yapar, yetenek boşluklarını (skill gap) belirler ve adaya özel gelişim rotaları (roadmap) oluşturur. Sistem, veri gizliliği (KVKK/GDPR uyumluluğu) esas alınarak bulut API'lerinden bağımsız çalışacak şekilde tasarlanmıştır.
+## Project Vision and Scope
+Pathora is a closed-loop, privacy-first career intelligence and Applicant Tracking System (ATS) platform designed to operate entirely on local infrastructure. By leveraging open-source Large Language Models (LLMs) and vector database technologies, the system parses, indexes, and matches unstructured candidate resume data against job descriptions using Natural Language Processing (NLP). It identifies technical skill gaps, generates custom career development roadmaps, and simulates target interviews. Pathora is architected to prioritize data confidentiality (ensuring GDPR/KVKK compliance) by eliminating dependencies on external cloud APIs and processing all personally identifiable information (PII) on-premise.
 
-## Mimari ve Teknoloji Yığını (Tech Stack)
+## Architecture and Tech Stack
 
-### Yapay Zeka ve Veri Katmanı
-* Çıkarımsal Dil Modeli (LLM): Llama 3.1 (8B) - Yerel (on-premise) metin üretimi ve anlamsal çıkarım.
-* Gömme (Embedding) Modeli: Nomic-Embed-Text - Metin verilerinin yüksek boyutlu vektörel temsili.
-* Vektör Veritabanı: ChromaDB - RAG (Retrieval-Augmented Generation) mimarisi altyapısında hızlı anlamsal arama (semantic search) entegrasyonu.
-* Model Yönetim Arayüzü: Ollama - Büyük dil modellerinin yerel ortamda izolasyonu ve yönetimi.
+### AI and Data Persistence Layer
+* Large Language Model (LLM): Llama 3.1 (8B) via Ollama for local text generation and semantic reasoning.
+* Text Embedding Model: Nomic-Embed-Text for high-dimensional vector representations of textual data.
+* Vector Database: ChromaDB for local persistent vector storage and semantic search integration within a Retrieval-Augmented Generation (RAG) pipeline.
 
-### Backend ve Mantıksal İşlemler
-* Programlama Dili: Python (3.10 - 3.12)
-* Belge Ayrıştırma (Parsing): PyMuPDF - Yapılandırılmamış PDF formatındaki özgeçmişlerin veri çıkarımı.
-* Veri İşleme: LangChain Text Splitters - RAG mimarisi için bağlam penceresini optimize eden metin bölümleme (chunking).
-* Veri Doğrulama ve Modelleme: Pydantic.
+### Backend and Core Logic
+* Programming Runtime: Python (3.10 - 3.12)
+* Document Parsing: PyMuPDF for high-fidelity text extraction from unstructured PDF documents.
+* Text Splitting: LangChain Text Splitters for context window optimization via recursive character chunking.
+* Data Validation: Pydantic for strict schema enforcement and model definitions.
 
-### Frontend ve Sunum Katmanı
-* Analitik Arayüz: Streamlit - Python tabanlı, reaktif ve veri odaklı web arayüzü sunumu.
-* Tanıtım Sayfası (Landing Page): React, TypeScript, Tailwind CSS, Framer Motion, React Three Fiber (R3F) kullanılarak tasarlanmış modern, WebGL destekli interaktif mimari (Vercel üzerinde barındırılmaktadır).
+### Frontend and Interface
+* Analytical Dashboard: Streamlit for a reactive, data-driven analytical web interface.
+* Product Showcase: React, TypeScript, Tailwind CSS, Framer Motion, and React Three Fiber (R3F) for a WebGL-accelerated static landing page.
 
-## Sistem Kapasitesi ve Temel Özellikler
+## Core Capabilities and System Features
 
-1. Otonom ATS (Applicant Tracking System) Simülasyonu
-Aday profili ile iş ilanının teknik ve yapısal eşleşmesini milisaniyeler içinde hesaplayan algoritmik skorlama motoru. Model gecikmesine (latency) maruz kalmadan anlık anahtar kelime yoğunluğu ve alaka düzeyi hesaplaması gerçekleştirilir.
+### Deterministic ATS Engine
+Calculates keyword matching density and structural layout integrity in milliseconds without incurring LLM inference latency. It cross-references extracted candidate credentials against a specialized, bilingual taxonomy of technical and soft skills, providing instant feedback on keyword coverage.
 
-2. RAG Tabanlı Bağlamsal Analiz
-Kullanıcı verileri vektörel parçalara (embeddings) ayrıştırılarak ChromaDB'de indekslenir. Kullanıcı sorgularında (prompting), sadece veritabanındaki en alakalı metin kesitleri (context) modele beslenerek halüsinasyon riski (AI hallucination) minimize edilir. Bu yöntem uzun özgeçmişlerde dahi yüksek tutarlılık sağlar.
+### Context-Aware RAG Pipeline
+Vectorizes document chunks and indexes them in ChromaDB. When user queries are processed, the system retrieves only the most semantically relevant text fragments to feed into the LLM context. This targeted injection prevents model hallucinations and maintains high coherence even across complex, long-form resumes.
 
-3. Güvenlik ve Uyumluluk Odaklı (Privacy-First) Yapı
-Hiçbir harici bulut servisine (OpenAI, Anthropic vb.) API çağrısı yapılmaz. Bütün süreç istemci donanımında (Edge Computing mantığı ile) çözümlenir, böylece aday kişisel verilerinin sızma riski ortadan kaldırılır.
+### Privacy-Preserving Execution
+No external API requests are dispatched to third-party cloud services. All computations, indexing, and text generations are resolved locally on the host machine, mitigating data leak risks and satisfying strict corporate security baselines.
 
-4. İleri Düzey Kariyer Zekası Raporlaması
-Uygulama, ham verilerden katma değerli ve eyleme geçirilebilir (actionable) raporlar derler:
-* Teknik Yetenek Boşluğu Analizi (Skill Gap Analysis)
-* Çok Yönlü Kariyer Gelişim Planlaması (Roadmapping)
-* Rol ve İlana Özelleştirilmiş Motivasyon Mektubu (Cover Letter) Üretimi
-* Adayın CV'si ile İş İlanı Çaprazlanarak Oluşturulan Davranışsal Mülakat Soruları (Behavioral Interview Prep)
-* HTML ve Markdown formatlarında yapılandırılmış çıktı dışa aktarımı.
-
-## Geliştirme Ortamı ve Kurulum Talimatları
-
-Sistem, platform bağımsız (cross-platform) çalışacak şekilde izole edilmiştir. Windows ortamı için sıfır yapılandırma (zero-config) prensibiyle çalışan batch komut dosyaları hazırlanmıştır.
-
-### Ön Koşullar
-* Python 3.10 - 3.12 arası sürüm kurulumu ve PATH çevre değişkenine eklenmiş olması.
-* Ollama yerel sunucusunun aktif çalışır durumda olması.
-
-### Kurulum (Tam Otomatik)
-Sanal çalışma ortamının (venv) oluşturulması, kütüphane bağımlılıklarının çözülmesi ve gerekli LLM modellerinin sisteme indirilmesi için projenin kök dizininde bulunan kurulum betiği çalıştırılmalıdır:
-
-```cmd
-setup.bat
-```
-
-### Uygulamayı Başlatma
-Hazırlık süreçleri tamamlandıktan sonra lokal web sunucusunu ayağa kaldırmak için:
-
-```cmd
-start.bat
-```
-
-Sunucu, standart yapılandırmada http://localhost:8501 adresi üzerinden dinlemeye başlar.
-
-## İnsan Kaynakları (İK) ve İşe Alım Ekipleri İçin Stratejik Değeri
-
-Pathora, modern yetenek kazanımı (Talent Acquisition) süreçlerinin verimliliğini maksimize etmek üzere tasarlanmıştır:
-* İşe Alım Süresi (Time-to-Fill / Time-to-Hire) Optimizasyonu: Yüksek hacimli başvurularda manuel ön eleme sürecini dakikalardan saniyelere indirger.
-* Analitik Karar Verme (Data-Driven Decision Making): Adayları tarafsız, tutarlı ve salt yetkinlik bazlı metriklerle değerlendirerek ön yargıları (unconscious bias) en aza indirir.
-* Aday Deneyimi (Candidate Experience): Reddedilen adaylara bile detaylı teknik gelişim geri bildirimleri sunabilme kapasitesi ile işveren markası (Employer Branding) değerini güçlendirir.
-* Güvenlik Uyumlu İnovasyon: Kurumsal verilerin dış sunuculara iletilmemesi prensibi, KVKK ve GDPR süreçlerinde hukuki bir bariyer oluşturmadan yapay zeka entegrasyonuna olanak tanır.
+### Comprehensive Career Intelligence Outputs
+Orchestrates raw analytical data into structured, actionable reports:
+* Technical Skill Gap Identification
+* Multi-Dimensional Career Path Roadmapping
+* Role-Specific Motivation Letter Synthesis
+* Tailored Behavioral and Technical Interview Simulation Sets
+* Structured HTML and Markdown Report Exporting
