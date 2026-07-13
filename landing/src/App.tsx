@@ -1,4 +1,4 @@
-import { LandingPage } from "./LandingPage";
+import LandingPage from "./LandingPage";
 
 /** Root app — tek sayfa landing. */
 export default function App() {
