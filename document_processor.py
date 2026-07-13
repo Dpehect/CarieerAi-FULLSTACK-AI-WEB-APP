@@ -228,6 +228,39 @@ def process_pdf_bytes(
     )
 
 
+def process_upload_bytes(
+    data: bytes,
+    file_name: str,
+    source_type: str,
+    chunk_size: int = 800,
+    chunk_overlap: int = 150,
+) -> ProcessedDocument:
+    """
+    PDF / TXT / MD yüklemesini tek yerden işler (Streamlit uploader).
+    """
+    ext = Path(file_name or "").suffix.lower()
+    if ext == ".pdf":
+        return process_pdf_bytes(
+            data,
+            source_type=source_type,
+            file_name=file_name,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+    if ext in (".txt", ".md", ".markdown", ".text", ""):
+        text = data.decode("utf-8", errors="replace")
+        return process_plain_text(
+            text,
+            source_type=source_type,
+            file_name=file_name or "upload.txt",
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+    raise ValueError(
+        f"Desteklenmeyen dosya: {ext or '(uzantısız)'}. PDF, TXT veya MD yükleyin."
+    )
+
+
 def process_plain_text(
     text: str,
     source_type: str,

@@ -1,7 +1,6 @@
 """
-KariyerAI - LLM Handler
-Ollama üzerinden yerel LLM çağrıları, sohbet geçmişi ve analiz orkestrasyonu.
-API key YOK — sadece localhost Ollama.
+KariyerAI — Ollama LLM handler + memory + analiz orkestrasyonu.
+API key yok. Token tasarrufu: kısa context, sıkı truncate.
 """
 
 from __future__ import annotations
@@ -9,14 +8,26 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Generator, List, Optional
 
+from config import (
+    DEFAULT_MODEL,
+    DEFAULT_TEMPERATURE,
+    MAX_CTX_CHARS,
+    MAX_DOC_CHARS,
+    MODEL_PREFERENCE,
+    OLLAMA_HOST,
+)
 from prompts import (
+    ATS_LLM_PROMPT,
     CAREER_ANALYSIS_PROMPT,
     CHAT_PROMPT,
+    COVER_LETTER_PROMPT,
     CV_IMPROVE_PROMPT,
+    FULL_REPORT_PROMPT,
     GAP_ANALYSIS_PROMPT,
     INTERVIEW_PREP_PROMPT,
+    LINKEDIN_PROMPT,
     ROADMAP_PROMPT,
     SUMMARY_PROMPT,
     SYSTEM_PROMPT,
@@ -25,16 +36,9 @@ from prompts import (
 from rag_engine import RAGEngine
 
 
-# Desteklenen modeller (kullanıcı Ollama'da hangisini indirdiyse onu seçer)
-DEFAULT_MODEL = "llama3.1:8b"
-FALLBACK_MODELS = ["llama3.1:8b", "qwen2.5:14b", "llama3.2", "mistral", "gemma2:9b"]
-
-
 @dataclass
 class ChatMessage:
-    """Tek bir sohbet mesajı."""
-
-    role: str  # "user" | "assistant" | "system"
+    role: str
     content: str
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
 
@@ -44,46 +48,28 @@ class ChatMessage:
 
 @dataclass
 class ConversationMemory:
-    """
-    Oturum içi konuşma geçmişi.
-    Streamlit session_state ile senkron tutulur.
-    """
-
     messages: List[ChatMessage] = field(default_factory=list)
-    max_messages: int = 40  # son N mesaj (user+assistant)
+    max_messages: int = 24
 
     def add(self, role: str, content: str) -> None:
         self.messages.append(ChatMessage(role=role, content=content))
-        # Sistem mesajları hariç kırp
-        non_system = [m for m in self.messages if m.role != "system"]
-        if len(non_system) > self.max_messages:
-            # En eski user/assistant çiftlerini at
-            overflow = len(non_system) - self.max_messages
-            kept_system = [m for m in self.messages if m.role == "system"]
-            kept_rest = non_system[overflow:]
-            self.messages = kept_system + kept_rest
+        non_sys = [m for m in self.messages if m.role != "system"]
+        if len(non_sys) > self.max_messages:
+            overflow = len(non_sys) - self.max_messages
+            kept_sys = [m for m in self.messages if m.role == "system"]
+            self.messages = kept_sys + non_sys[overflow:]
 
     def clear(self) -> None:
         self.messages.clear()
 
-    def as_ollama_messages(self, system: str = SYSTEM_PROMPT) -> List[dict]:
-        """Ollama chat API formatı."""
-        out = [{"role": "system", "content": system}]
-        for m in self.messages:
-            if m.role in ("user", "assistant"):
-                out.append({"role": m.role, "content": m.content})
-        return out
-
-    def history_text(self, last_n: int = 8) -> str:
-        """Prompt içine gömülecek kısa geçmiş metni."""
+    def history_text(self, last_n: int = 6) -> str:
         recent = [m for m in self.messages if m.role in ("user", "assistant")][-last_n:]
         if not recent:
-            return "(Henüz geçmiş yok.)"
+            return "(yok)"
         lines = []
         for m in recent:
-            label = "Kullanıcı" if m.role == "user" else "KariyerAI"
-            # Çok uzun mesajları kısalt
-            body = m.content if len(m.content) < 800 else m.content[:800] + "…"
+            label = "K" if m.role == "user" else "AI"
+            body = m.content if len(m.content) < 400 else m.content[:400] + "…"
             lines.append(f"{label}: {body}")
         return "\n".join(lines)
 
@@ -91,7 +77,7 @@ class ConversationMemory:
         return [m.to_dict() for m in self.messages]
 
     @classmethod
-    def from_list(cls, data: List[dict], max_messages: int = 40) -> "ConversationMemory":
+    def from_list(cls, data: List[dict], max_messages: int = 24) -> "ConversationMemory":
         mem = cls(max_messages=max_messages)
         for item in data or []:
             mem.messages.append(
@@ -105,15 +91,11 @@ class ConversationMemory:
 
 
 class LLMHandler:
-    """
-    Ollama LLM sarmalayıcısı + RAG ile analiz fonksiyonları.
-    """
-
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
-        ollama_host: str = "http://localhost:11434",
-        temperature: float = 0.4,
+        ollama_host: str = OLLAMA_HOST,
+        temperature: float = DEFAULT_TEMPERATURE,
         rag: Optional[RAGEngine] = None,
     ):
         self.model = model
@@ -122,155 +104,127 @@ class LLMHandler:
         self.rag = rag or RAGEngine(ollama_host=ollama_host)
         self.memory = ConversationMemory()
         self._client = None
+        self.cv_text = ""
+        self.job_text = ""
+        self.cv_summary = "(CV yok)"
+        self.job_summary = "(İlan yok)"
 
-        # Oturumda tutulan tam metinler (RAG chunk'larından bağımsız özet/prompt için)
-        self.cv_text: str = ""
-        self.job_text: str = ""
-        self.cv_summary: str = ""
-        self.job_summary: str = ""
-
-    # ------------------------------------------------------------------
-    # Ollama bağlantısı
-    # ------------------------------------------------------------------
     def _get_client(self):
         if self._client is None:
-            try:
-                import ollama
-            except ImportError as e:
-                raise ImportError(
-                    "ollama paketi yok. Kurulum: pip install ollama"
-                ) from e
+            import ollama
             self._client = ollama.Client(host=self.ollama_host)
         return self._client
 
+    @staticmethod
+    def _parse_model_names(listing) -> List[str]:
+        raw = listing.get("models") if isinstance(listing, dict) else getattr(listing, "models", []) or []
+        names = []
+        for m in raw:
+            if isinstance(m, dict):
+                names.append(m.get("name") or m.get("model") or "")
+            else:
+                names.append(getattr(m, "model", None) or getattr(m, "name", "") or "")
+        return [n for n in names if n]
+
+    @classmethod
+    def pick_best_model(cls, available: List[str], preferred: str = DEFAULT_MODEL) -> str:
+        """Yüklü modellerden tercih listesine göre en iyisini seç."""
+        if not available:
+            return preferred
+        if any(preferred == n or n.startswith(preferred.split(":")[0]) for n in available):
+            for n in available:
+                if n == preferred or n.startswith(preferred + ":") or preferred.startswith(n.split(":")[0]):
+                    if preferred in n or n.startswith(preferred.split(":")[0]):
+                        # exact-ish match
+                        if n == preferred or n.startswith(preferred):
+                            return n
+            for n in available:
+                if n.startswith(preferred.split(":")[0]):
+                    return n
+        for cand in MODEL_PREFERENCE:
+            for n in available:
+                if n == cand or n.startswith(cand.split(":")[0]):
+                    return n
+        return available[0]
+
     def check_connection(self) -> dict:
-        """
-        Ollama erişilebilir mi, model yüklü mü kontrol eder.
-        Returns: {"ok": bool, "message": str, "models": list}
-        """
         try:
             client = self._get_client()
-            listing = client.list()
-            # ollama lib sürümüne göre dict veya object
-            raw_models = []
-            if isinstance(listing, dict):
-                raw_models = listing.get("models") or []
-            else:
-                raw_models = getattr(listing, "models", []) or []
-
-            names = []
-            for m in raw_models:
-                if isinstance(m, dict):
-                    names.append(m.get("name") or m.get("model") or "")
-                else:
-                    names.append(getattr(m, "model", None) or getattr(m, "name", "") or "")
-
-            names = [n for n in names if n]
-            model_ok = any(
-                self.model == n or self.model in n or n.startswith(self.model.split(":")[0])
-                for n in names
-            )
+            names = self._parse_model_names(client.list())
             if not names:
-                return {
-                    "ok": False,
-                    "message": "Ollama çalışıyor ama hiç model yok. "
-                    f"Şunu çalıştırın: ollama pull {self.model}",
-                    "models": [],
-                }
+                return {"ok": False, "message": f"Model yok. ollama pull {self.model}", "models": []}
+            model_ok = any(
+                self.model == n or n.startswith(self.model.split(":")[0]) for n in names
+            )
+            suggested = self.pick_best_model(names, self.model)
             if not model_ok:
                 return {
                     "ok": False,
-                    "message": (
-                        f"Seçili model '{self.model}' bulunamadı. "
-                        f"Yüklü modeller: {', '.join(names)}. "
-                        f"İndirmek için: ollama pull {self.model}"
-                    ),
+                    "message": f"'{self.model}' yok. Öneri: {suggested}. Yüklü: {', '.join(names[:6])}",
                     "models": names,
+                    "suggested": suggested,
                 }
             return {
                 "ok": True,
-                "message": f"Bağlantı OK — model: {self.model}",
+                "message": f"Ollama OK · {self.model}",
                 "models": names,
+                "suggested": suggested,
             }
         except Exception as e:
             return {
                 "ok": False,
-                "message": (
-                    "Ollama'ya bağlanılamadı. Ollama uygulamasının açık olduğundan emin olun.\n"
-                    f"Host: {self.ollama_host}\nHata: {e}"
-                ),
+                "message": f"Ollama kapalı mı? {self.ollama_host} · {e}",
                 "models": [],
+                "suggested": self.model,
             }
 
-    def list_local_models(self) -> List[str]:
-        info = self.check_connection()
-        return info.get("models") or []
-
-    # ------------------------------------------------------------------
-    # Belge bağlamı
-    # ------------------------------------------------------------------
     def set_cv_text(self, text: str) -> None:
         self.cv_text = text or ""
-        self.cv_summary = self._short_local_summary(self.cv_text, label="CV")
+        self.cv_summary = self._short(self.cv_text, 500) if self.cv_text else "(CV yok)"
 
     def set_job_text(self, text: str) -> None:
         self.job_text = text or ""
-        self.job_summary = self._short_local_summary(self.job_text, label="İş ilanı")
+        self.job_summary = self._short(self.job_text, 500) if self.job_text else "(İlan yok)"
 
-    def _short_local_summary(self, text: str, label: str = "", max_len: int = 600) -> str:
-        """LLM çağırmadan kaba özet (hızlı UI)."""
-        if not text:
-            return f"({label} yok)" if label else "(yok)"
-        t = " ".join(text.split())
-        if len(t) <= max_len:
-            return t
-        return t[:max_len] + "…"
+    @staticmethod
+    def _short(text: str, n: int = 500) -> str:
+        t = " ".join((text or "").split())
+        return t if len(t) <= n else t[:n] + "…"
 
-    def _truncate(self, text: str, max_chars: int = 12000) -> str:
+    @staticmethod
+    def _trunc(text: str, max_chars: int = MAX_DOC_CHARS) -> str:
         if not text:
             return ""
         if len(text) <= max_chars:
             return text
-        return text[:max_chars] + "\n\n[... metin uzun olduğu için kısaltıldı ...]"
+        return text[:max_chars] + "\n[...kısaltıldı...]"
 
-    # ------------------------------------------------------------------
-    # Temel generate
-    # ------------------------------------------------------------------
-    def generate(
-        self,
-        prompt: str,
-        system: str = SYSTEM_PROMPT,
-        temperature: Optional[float] = None,
-    ) -> str:
-        """Tek seferlik (stateless) tamamla."""
+    def _ctx(self, query: str, top_k: int = 5) -> str:
+        return self.rag.build_context(query, top_k=top_k, max_chars=MAX_CTX_CHARS)
+
+    def _docs(self, query: str) -> dict:
+        return {
+            "cv_text": self._trunc(self.cv_text),
+            "job_text": self._trunc(self.job_text),
+            "context": self._ctx(query),
+        }
+
+    def generate(self, prompt: str, system: str = SYSTEM_PROMPT, temperature: Optional[float] = None) -> str:
         client = self._get_client()
         temp = self.temperature if temperature is None else temperature
-        try:
-            resp = client.chat(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": prompt},
-                ],
-                options={
-                    "temperature": temp,
-                    "num_ctx": 8192,
-                },
-            )
-        except Exception as e:
-            raise RuntimeError(
-                f"LLM yanıt üretemedi. Model: {self.model}. Hata: {e}"
-            ) from e
-
+        resp = client.chat(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            options={"temperature": temp, "num_ctx": 6144, "num_predict": 2048},
+        )
         return self._extract_content(resp)
 
     def generate_stream(
-        self,
-        prompt: str,
-        system: str = SYSTEM_PROMPT,
-        temperature: Optional[float] = None,
+        self, prompt: str, system: str = SYSTEM_PROMPT, temperature: Optional[float] = None
     ) -> Generator[str, None, None]:
-        """Streaming token üretici (Streamlit için)."""
         client = self._get_client()
         temp = self.temperature if temperature is None else temperature
         try:
@@ -281,29 +235,17 @@ class LLMHandler:
                     {"role": "user", "content": prompt},
                 ],
                 stream=True,
-                options={
-                    "temperature": temp,
-                    "num_ctx": 8192,
-                },
+                options={"temperature": temp, "num_ctx": 6144, "num_predict": 2048},
             )
             for chunk in stream:
-                content = self._extract_stream_delta(chunk)
-                if content:
-                    yield content
+                c = self._extract_stream_delta(chunk)
+                if c:
+                    yield c
         except Exception as e:
             yield f"\n\n⚠️ Hata: {e}"
 
-    def chat(
-        self,
-        user_message: str,
-        use_rag: bool = True,
-        top_k: int = 6,
-    ) -> str:
-        """Hafızalı sohbet (non-stream)."""
-        context = ""
-        if use_rag:
-            context = self.rag.build_context(user_message, top_k=top_k)
-
+    def chat_stream(self, user_message: str, use_rag: bool = True, top_k: int = 5) -> Generator[str, None, None]:
+        context = self._ctx(user_message, top_k=top_k) if use_rag else ""
         prompt = build_prompt(
             CHAT_PROMPT,
             question=user_message,
@@ -312,32 +254,6 @@ class LLMHandler:
             cv_summary=self.cv_summary,
             job_summary=self.job_summary,
         )
-
-        self.memory.add("user", user_message)
-        answer = self.generate(prompt)
-        self.memory.add("assistant", answer)
-        return answer
-
-    def chat_stream(
-        self,
-        user_message: str,
-        use_rag: bool = True,
-        top_k: int = 6,
-    ) -> Generator[str, None, None]:
-        """Hafızalı sohbet (stream). Bitince memory'ye yazar."""
-        context = ""
-        if use_rag:
-            context = self.rag.build_context(user_message, top_k=top_k)
-
-        prompt = build_prompt(
-            CHAT_PROMPT,
-            question=user_message,
-            chat_history=self.memory.history_text(),
-            context=context,
-            cv_summary=self.cv_summary,
-            job_summary=self.job_summary,
-        )
-
         self.memory.add("user", user_message)
         full: List[str] = []
         for token in self.generate_stream(prompt):
@@ -345,94 +261,70 @@ class LLMHandler:
             yield token
         self.memory.add("assistant", "".join(full))
 
-    # ------------------------------------------------------------------
-    # Analiz modları
-    # ------------------------------------------------------------------
-    def _analysis_context(self, query: str) -> str:
-        return self.rag.build_context(query, top_k=8)
+    def career_analysis(self, stream: bool = True):
+        p = build_prompt(CAREER_ANALYSIS_PROMPT, **self._docs("uyum deneyim beceri skor"))
+        return self.generate_stream(p) if stream else self.generate(p)
 
-    def career_analysis(self, stream: bool = False):
-        query = "kariyer analizi uyum beceriler deneyim"
-        ctx = self._analysis_context(query)
-        prompt = build_prompt(
-            CAREER_ANALYSIS_PROMPT,
-            cv_text=self._truncate(self.cv_text),
-            job_text=self._truncate(self.job_text),
-            context=ctx,
+    def gap_analysis(self, stream: bool = True):
+        p = build_prompt(GAP_ANALYSIS_PROMPT, **self._docs("eksik beceri gereksinim gap"))
+        return self.generate_stream(p) if stream else self.generate(p)
+
+    def roadmap(self, extra_notes: str = "", stream: bool = True):
+        d = self._docs("yol haritası öğrenme plan")
+        p = build_prompt(ROADMAP_PROMPT, **d, extra_notes=extra_notes or "Yok")
+        return self.generate_stream(p) if stream else self.generate(p)
+
+    def improve_cv(self, stream: bool = True):
+        p = build_prompt(CV_IMPROVE_PROMPT, **self._docs("cv iyileştir anahtar kelime"))
+        return self.generate_stream(p) if stream else self.generate(p)
+
+    def interview_prep(self, stream: bool = True):
+        p = build_prompt(INTERVIEW_PREP_PROMPT, **self._docs("mülakat STAR teknik"))
+        return self.generate_stream(p) if stream else self.generate(p)
+
+    def ats_commentary(self, ats_local_score: int, ats_summary: str, stream: bool = True):
+        d = self._docs("ATS anahtar kelime format")
+        p = build_prompt(
+            ATS_LLM_PROMPT,
+            **d,
+            ats_local_score=str(ats_local_score),
+            ats_summary=ats_summary,
         )
-        return self._run(prompt, stream)
+        return self.generate_stream(p) if stream else self.generate(p)
 
-    def gap_analysis(self, stream: bool = False):
-        query = "eksik beceriler gereksinimler gap teknik soft skill"
-        ctx = self._analysis_context(query)
-        prompt = build_prompt(
-            GAP_ANALYSIS_PROMPT,
-            cv_text=self._truncate(self.cv_text),
-            job_text=self._truncate(self.job_text),
-            context=ctx,
+    def full_report(self, ats_local_score: int, ats_summary: str, stream: bool = True):
+        d = self._docs("özet gap aksiyon plan")
+        p = build_prompt(
+            FULL_REPORT_PROMPT,
+            **d,
+            ats_local_score=str(ats_local_score),
+            ats_summary=ats_summary,
         )
-        return self._run(prompt, stream)
+        return self.generate_stream(p) if stream else self.generate(p)
 
-    def roadmap(self, extra_notes: str = "", stream: bool = False):
-        query = "kariyer yol haritası öğrenme planı hedefler"
-        ctx = self._analysis_context(query)
-        prompt = build_prompt(
-            ROADMAP_PROMPT,
-            cv_text=self._truncate(self.cv_text),
-            job_text=self._truncate(self.job_text),
-            context=ctx,
-            extra_notes=extra_notes or "Yok",
-        )
-        return self._run(prompt, stream)
+    def cover_letter(self, stream: bool = True):
+        p = build_prompt(COVER_LETTER_PROMPT, **self._docs("motivasyon mektubu başvuru"))
+        return self.generate_stream(p) if stream else self.generate(p)
 
-    def improve_cv(self, stream: bool = False):
-        query = "CV iyileştirme anahtar kelimeler deneyim maddeleri"
-        ctx = self._analysis_context(query)
-        prompt = build_prompt(
-            CV_IMPROVE_PROMPT,
-            cv_text=self._truncate(self.cv_text),
-            job_text=self._truncate(self.job_text),
-            context=ctx,
-        )
-        return self._run(prompt, stream)
+    def linkedin_profile(self, stream: bool = True):
+        p = build_prompt(LINKEDIN_PROMPT, **self._docs("linkedin headline about skills"))
+        return self.generate_stream(p) if stream else self.generate(p)
 
-    def interview_prep(self, stream: bool = False):
-        query = "mülakat soruları STAR teknik davranışsal"
-        ctx = self._analysis_context(query)
-        prompt = build_prompt(
-            INTERVIEW_PREP_PROMPT,
-            cv_text=self._truncate(self.cv_text),
-            job_text=self._truncate(self.job_text),
-            context=ctx,
-        )
-        return self._run(prompt, stream)
+    def export_memory_json(self) -> str:
+        return json.dumps(self.memory.to_list(), ensure_ascii=False, indent=2)
 
-    def summarize(self, text: str) -> str:
-        prompt = build_prompt(SUMMARY_PROMPT, text=self._truncate(text, 8000))
-        return self.generate(prompt, temperature=0.2)
+    def clear_memory(self) -> None:
+        self.memory.clear()
 
-    def _run(self, prompt: str, stream: bool):
-        if stream:
-            return self.generate_stream(prompt)
-        return self.generate(prompt)
-
-    # ------------------------------------------------------------------
-    # Yanıt parse yardımcıları
-    # ------------------------------------------------------------------
     @staticmethod
     def _extract_content(resp: Any) -> str:
         if resp is None:
             return ""
         if isinstance(resp, dict):
             msg = resp.get("message") or {}
-            if isinstance(msg, dict):
-                return (msg.get("content") or "").strip()
-            return (getattr(msg, "content", None) or "").strip()
-        # object
+            return ((msg.get("content") if isinstance(msg, dict) else getattr(msg, "content", None)) or "").strip()
         msg = getattr(resp, "message", None)
-        if msg is not None:
-            return (getattr(msg, "content", None) or "").strip()
-        return str(resp).strip()
+        return ((getattr(msg, "content", None) if msg else None) or "").strip()
 
     @staticmethod
     def _extract_stream_delta(chunk: Any) -> str:
@@ -440,19 +332,6 @@ class LLMHandler:
             return ""
         if isinstance(chunk, dict):
             msg = chunk.get("message") or {}
-            if isinstance(msg, dict):
-                return msg.get("content") or ""
-            return getattr(msg, "content", None) or ""
+            return (msg.get("content") if isinstance(msg, dict) else getattr(msg, "content", None)) or ""
         msg = getattr(chunk, "message", None)
-        if msg is not None:
-            return getattr(msg, "content", None) or ""
-        return ""
-
-    # ------------------------------------------------------------------
-    # Memory export
-    # ------------------------------------------------------------------
-    def export_memory_json(self) -> str:
-        return json.dumps(self.memory.to_list(), ensure_ascii=False, indent=2)
-
-    def clear_memory(self) -> None:
-        self.memory.clear()
+        return (getattr(msg, "content", None) if msg else None) or ""

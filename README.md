@@ -1,426 +1,132 @@
 # 🎯 KariyerAI — Yerel AI Kariyer Koçu
 
-**KariyerAI**, bilgisayarınızda %100 yerel çalışan profesyonel bir AI kariyer koçudur.
+Profesyonel, **ücretsiz** ve **%100 yerel** kariyer koçu.
 
-- PDF CV ve iş ilanı yükleme  
-- ChromaDB + `nomic-embed-text` ile RAG  
-- Kariyer analizi, gap analizi, roadmap, CV iyileştirme, mülakat hazırlığı  
-- Streamlit arayüzü + sohbet hafızası  
-- **API key yok** — sadece [Ollama](https://ollama.com)
+- PDF / TXT / MD + metin CV & iş ilanı  
+- **ATS skoru** (anında, LLM beklemez) + renkli kelime etiketleri  
+- **Demo veri** (tek tık test)  
+- RAG (ChromaDB + `nomic-embed-text`)  
+- Gap, roadmap, CV, **motivasyon mektubu**, **LinkedIn**, mülakat  
+- **Tam rapor** + Markdown / HTML export (HTML → PDF yazdır)  
+- Sohbet hafızası + önerilen sorular + yerel oturum kaydı  
+- Otomatik model seçimi · **API key yok** — [Ollama](https://ollama.com)
 
----
-
-## 📁 Proje Yapısı
-
-```
-aicoach/
-├── streamlit_app.py                 # Streamlit arayüzü (başlangıç noktası)
-├── prompts.py              # Tüm LLM prompt şablonları
-├── document_processor.py   # PDF okuma, temizleme, chunking
-├── rag_engine.py           # ChromaDB + embedding + arama
-├── llm_handler.py          # Ollama LLM + memory + analizler
-├── requirements.txt        # Python bağımlılıkları
-├── README.md               # Bu dosya
-└── data/
-    └── chroma_db/          # (otomatik oluşur) vektör veritabanı
-```
+> Vercel sayfası yalnızca bilgilendirmedir. Asıl app bilgisayarınızda çalışır.
 
 ---
 
-## 🧰 Gereksinimler (donanım / yazılım)
+## ⚡ Windows — en kolay kurulum (önerilen)
 
-| Bileşen | Öneri |
-|--------|--------|
-| İşletim sistemi | Windows 10/11, macOS veya Linux |
-| Python | **3.10, 3.11 veya 3.12** (3.13 bazen paket sorunlu olabilir) |
-| RAM | En az **16 GB** (8B model için); 14B için **32 GB** ideal |
-| Disk | Modeller için ~5–10 GB boş alan |
-| GPU | Zorunlu değil; NVIDIA GPU varsa Ollama otomatik hızlanır |
-| İnternet | Sadece **ilk kurulumda** (Ollama + model indirme). Sonra offline çalışır. |
+### 0) Önkoşullar (bir kez)
+
+1. **Python 3.10–3.12** → https://www.python.org/downloads/  
+   - Kurulumda **Add python.exe to PATH** işaretleyin  
+2. **Ollama** → https://ollama.com/download  
+   - Kurulumdan sonra Ollama’yı açık bırakın  
+
+### 1) Projeyi indir
+
+```text
+git clone https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP.git
+cd CarieerAi-FULLSTACK-AI-WEB-APP
+```
+
+veya ZIP indirip klasörü açın.
+
+### 2) Tek tık kurulum
+
+Klasörde **`setup.bat`** dosyasına **çift tıklayın**.
+
+Bu script:
+
+- sanal ortam (`.venv`) oluşturur  
+- paketleri kurar  
+- `nomic-embed-text` + `llama3.1:8b` modellerini çeker (yoksa)  
+
+### 3) Tek tık çalıştır
+
+**`start.bat`** dosyasına çift tıklayın.
+
+Tarayıcı: **http://localhost:8501**
 
 ---
 
-# 🚀 KURULUM — ADIM ADIM (Windows odaklı)
-
-Aşağıdaki adımları **sırayla**, atlamadan uygulayın.
-
----
-
-## ADIM 1 — Python kurulumu
-
-1. Tarayıcıdan şu adrese gidin:  
-   https://www.python.org/downloads/
-2. **Python 3.11** veya **3.12** indirin (önerilen).
-3. Kurulum sihirbazında **mutlaka** şunu işaretleyin:  
-   ✅ **Add python.exe to PATH**
-4. “Install Now” ile kurun.
-5. Kurulum bitince **yeni bir PowerShell / Terminal** açın (eski pencere PATH’i görmez).
-6. Kontrol edin:
-
-```powershell
-python --version
-```
-
-Beklenen örnek çıktı:
-
-```
-Python 3.11.9
-```
-
-`python` bulunamadı diyorsa:
-
-```powershell
-py --version
-```
-
-Bundan sonra komutlarda `python` yerine `py` kullanabilirsiniz.
-
-**pip kontrolü:**
-
-```powershell
-python -m pip --version
-```
-
----
-
-## ADIM 2 — Ollama kurulumu
-
-1. https://ollama.com/download adresine gidin.
-2. **Windows** sürümünü indirip kurun.
-3. Kurulumdan sonra Ollama arka planda çalışır (sistem tepsisinde ikon).
-4. **Yeni PowerShell** açıp kontrol edin:
-
-```powershell
-ollama --version
-```
-
-### Ollama servisinin açık olduğundan emin olun
-
-- Windows’ta Ollama uygulamasını Start menüsünden açın.
-- Veya:
-
-```powershell
-ollama serve
-```
-
-(Bu pencere açık kalabilir; başka bir PowerShell’de devam edin.)
-
----
-
-## ADIM 3 — AI modellerini indirin
-
-İki model gerekir:
-
-1. **Chat / analiz modeli** (birini seçin)  
-2. **Embedding modeli** (zorunlu: `nomic-embed-text`)
-
-### 3.1 Embedding modeli (zorunlu)
-
-```powershell
-ollama pull nomic-embed-text
-```
-
-### 3.2 Chat modeli — seçenek A (önerilen, daha az RAM)
-
-```powershell
-ollama pull llama3.1:8b
-```
-
-### 3.2 Chat modeli — seçenek B (daha güçlü, daha çok RAM)
-
-```powershell
-ollama pull qwen2.5:14b
-```
-
-İndirme birkaç GB sürebilir. Bittiğini doğrulayın:
-
-```powershell
-ollama list
-```
-
-Listede `nomic-embed-text` ve seçtiğiniz chat modeli görünmeli.
-
-### Hızlı test (opsiyonel)
-
-```powershell
-ollama run llama3.1:8b "Merhaba, bir cümleyle kendini tanıt."
-```
-
-Cevap gelirse LLM tarafı hazır demektir. Çıkmak için `/bye` yazın.
-
----
-
-## ADIM 4 — Proje klasörüne gidin
-
-Proje masaüstünde `tries\aicoach` altındaysa:
+## 🖥️ Manuel kurulum (isterseniz)
 
 ```powershell
 cd C:\Users\USER\Desktop\tries\aicoach
-```
-
-Kendi yolunuz farklıysa ona göre değiştirin.  
-Doğrulama:
-
-```powershell
-dir
-```
-
-Şunları görmelisiniz: `streamlit_app.py`, `requirements.txt`, `prompts.py`, ...
-
----
-
-## ADIM 5 — Sanal ortam (virtual environment) oluşturun
-
-Projeyi sistem Python’undan izole etmek için sanal ortam kullanın:
-
-```powershell
 python -m venv .venv
-```
-
-Sanal ortamı **aktifleştirin**:
-
-```powershell
 .\.venv\Scripts\Activate.ps1
-```
-
-Başarılı olursa satır başında `(.venv)` görürsünüz.
-
-### PowerShell “execution policy” hatası alırsanız
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-```
-
-Onaylayın (`Y`), sonra tekrar:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-**CMD** kullanıyorsanız:
-
-```cmd
-.venv\Scripts\activate.bat
-```
-
----
-
-## ADIM 6 — Python paketlerini kurun
-
-Sanal ortam **aktifken**:
-
-```powershell
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Bu işlem birkaç dakika sürebilir (özellikle `chromadb`, `streamlit`).
-
-Hata alırsanız:
-
-1. Python sürümünüzün 3.10–3.12 olduğundan emin olun.  
-2. Visual C++ Build Tools gerekebilir (nadiren `chroma` derlemesi için).  
-3. Tekrar deneyin:
-
-```powershell
-python -m pip install -r requirements.txt --upgrade
-```
-
----
-
-## ADIM 7 — Uygulamayı başlatın
-
-Ollama’nın çalıştığından emin olun, sanal ortam aktifken:
-
-```powershell
-streamlit run streamlit_app.py
-```
-
-Otomatik tarayıcı açılır. Açılmazsa adreste şunu deneyin:
-
-```
-http://localhost:8501
-```
-
----
-
-# 🖥️ İLK KULLANIM (uygulama içi)
-
-1. Sol menüde **“Bağlantıyı Kontrol Et”** → yeşil ✅ olmalı.  
-2. Model listesinden `llama3.1:8b` veya `qwen2.5:14b` seçin.  
-3. **CV (PDF)** yükleyin veya metin yapıştırın → **CV'yi İndeksle**.  
-4. **İş ilanı** yükleyin veya yapıştırın → **İlanı İndeksle**.  
-5. Üst sekmelerden istediğiniz analizi çalıştırın veya **Sohbet** edin.
-
-### İpuçları
-
-- Taranmış (sadece görüntü) PDF’lerde metin çıkmayabilir → metin tabanlı PDF veya kopyala-yapıştır kullanın.  
-- İlk embedding / ilk LLM cevabı yavaş olabilir (model RAM’e yüklenir).  
-- “DB Temizle” vektör deposunu sıfırlar; “Sohbeti Sil” sadece sohbet geçmişini siler.
-
----
-
-# 🔁 Sonraki açılışlarda (kısa özet)
-
-Her yeni terminal oturumunda:
-
-```powershell
-cd C:\Users\USER\Desktop\tries\aicoach
-.\.venv\Scripts\Activate.ps1
-streamlit run streamlit_app.py
-```
-
-Ollama’nın arka planda açık olduğundan emin olun.
-
----
-
-# 🛠️ Sık Karşılaşılan Hatalar
-
-### 1) `ollama is not recognized`
-
-- Ollama kurulu değil veya PATH’e eklenmemiş.  
-- Ollama’yı yeniden kurun, bilgisayarı / terminali yeniden başlatın.
-
-### 2) `Connection refused` / Ollama'ya bağlanılamadı
-
-- Ollama uygulamasını açın veya `ollama serve` çalıştırın.  
-- Varsayılan adres: `http://localhost:11434`
-
-### 3) Model bulunamadı
-
-```powershell
+pip install -r requirements.txt
+ollama pull nomic-embed-text
 ollama pull llama3.1:8b
-ollama pull nomic-embed-text
-```
-
-### 4) Embedding hatası
-
-```powershell
-ollama pull nomic-embed-text
-ollama list
-```
-
-### 5) PDF’den metin çıkmadı
-
-- Dosya taranmış görüntü olabilir.  
-- Google Docs / Word’e aktarıp metin PDF kaydedin veya metni yapıştırın.
-
-### 6) Çok yavaş cevap
-
-- 14B model yerine `llama3.1:8b` deneyin.  
-- Temperature’ı 0.3–0.4 tutun.  
-- Diğer ağır programları kapatın.  
-- Mümkünse NVIDIA GPU sürücülerini güncelleyin.
-
-### 7) `ModuleNotFoundError`
-
-Sanal ortam aktif mi kontrol edin; sonra:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-### 8) Port 8501 dolu
-
-```powershell
-streamlit run streamlit_app.py --server.port 8502
+streamlit run main.py
 ```
 
 ---
 
-# 🧠 Mimari (kısa)
+## 📁 Proje yapısı
 
+```text
+aicoach/
+├── setup.bat / start.bat  # Tek tık kurulum & çalıştır
+├── main.py                # Streamlit UI
+├── config.py              # Merkezi ayarlar
+├── sample_data.py         # Demo CV / ilan
+├── ats_scorer.py          # Yerel ATS
+├── report_export.py       # MD / HTML
+├── prompts.py · llm_handler.py · rag_engine.py · document_processor.py
+├── .streamlit/config.toml # Tema
+├── public/ · vercel.json  # Statik landing
+└── requirements.txt
 ```
-[PDF/Metin] → document_processor (PyMuPDF + chunk)
-                    ↓
-            rag_engine (nomic-embed-text + ChromaDB)
-                    ↓
-            llm_handler (Ollama chat + prompts + memory)
-                    ↓
-              streamlit_app.py (Streamlit UI)
-```
-
-- **prompts.py**: Analiz / sohbet şablonları  
-- **document_processor.py**: Metin çıkarma ve parçalama  
-- **rag_engine.py**: Vektör indeks + anlamsal arama  
-- **llm_handler.py**: Ollama çağrıları, streaming, conversation memory  
-- **streamlit_app.py**: Kullanıcı arayüzü ve orkestrasyon  
-
-Veriler `data/chroma_db/` altında yerelde saklanır; dışarı API çağrısı yapılmaz (Ollama localhost hariç).
 
 ---
 
-# 📦 Bağımlılıklar (özet)
+## 🧭 Uygulama kullanımı
 
-- `streamlit` — arayüz  
-- `ollama` — yerel LLM / embedding istemcisi  
-- `chromadb` — vektör veritabanı  
-- `langchain-text-splitters` — metin parçalama  
-- `pymupdf` — PDF okuma  
-
----
-
-# ⚠️ Vercel / Netlify / bulut deploy çalışmaz
-
-Bu proje **bilerek yerel**dir. Şunlara bağımlıdır:
-
-| Bileşen | Neden bulutta sorun? |
-|--------|----------------------|
-| **Ollama** | Bilgisayarında çalışan yerel LLM sunucusu (`localhost:11434`). Vercel’de Ollama yok. |
-| **Streamlit** | `streamlit run streamlit_app.py` ile ayakta duran uzun ömürlü web app. Vercel ise kısa ömürlü **serverless function** bekler (`app` / `handler` export). |
-| **ChromaDB** | Diskte kalıcı vektör DB (`data/chroma_db/`). Serverless ortamda kalıcı disk yok / uygun değil. |
-
-**Vercel ne yayınlar?**
-
-`vercel.json` + `public/index.html` sayesinde Vercel yalnızca **statik bilgilendirme sayfası** deploy eder.
-AI (Ollama / Streamlit / ChromaDB) bulutta **çalışmaz**.
-
-**Asıl uygulama (kendi PC’n):**
-
-```powershell
-cd C:\Users\USER\Desktop\tries\aicoach
-.\.venv\Scripts\Activate.ps1
-streamlit run streamlit_app.py
-```
-
-Tarayıcı: http://localhost:8501  
-
-> Giriş dosyası adı: `streamlit_app.py` (eski `main.py` Vercel’in Python entrypoint sanmasına yol açıyordu).
+1. Sol menü → **Bağlantıyı kontrol et**  
+2. **CV indeksle** + **İlan indeksle**  
+3. **ATS** → anında skor  
+4. Analiz / Gap / Roadmap / CV / Mülakat  
+5. **Tam rapor** → MD veya HTML indir  
+6. HTML’i tarayıcıda aç → **Ctrl+P** → PDF olarak kaydet  
 
 ---
 
-# 🔧 Ollama PATH (Windows)
+## 💰 Maliyet
 
-Ollama kuruluyken terminal `ollama` komutunu bulamıyorsa:
-
-1. Ollama klasörü genelde:  
-   `C:\Users\<KULLANICI>\AppData\Local\Programs\Ollama`
-2. **Yeni bir PowerShell/CMD** aç (PATH güncellemesi eski pencerelere yansımaz).
-3. Test:
-
-```powershell
-ollama --version
-ollama list
-```
-
-Hâlâ bulunamazsa (PowerShell, yönetici gerekmez):
-
-```powershell
-$ollama = "$env:LOCALAPPDATA\Programs\Ollama"
-[Environment]::SetEnvironmentVariable(
-  "Path",
-  ([Environment]::GetEnvironmentVariable("Path", "User").TrimEnd(';') + ";" + $ollama),
-  "User"
-)
-```
-
-Sonra **tüm terminalleri kapatıp yeniden aç**.  
-Uygulama aslında PATH’e ihtiyaç duymaz; Ollama arka planda açıksa `http://localhost:11434` yeterlidir.
+| Bileşen | Ücret |
+|--------|--------|
+| Ollama + modeller | Ücretsiz |
+| Streamlit / ChromaDB | Ücretsiz |
+| API key | Yok |
+| Vercel landing | Ücretsiz (statik) |
 
 ---
 
-# 📜 Lisans / Not
+## ⚠️ Vercel
 
-Eğitim ve kişisel kullanım için örnek projedir. Üretilen kariyer tavsiyeleri bilgilendirme amaçlıdır; profesyonel İK danışmanlığı yerine geçmez.
+Bu repo Vercel’de **statik bilgilendirme** yayınlar.  
+Streamlit + Ollama **Vercel serverless’da çalışmaz**.
 
-**İyi şanslar — CV’nizi yükleyin ve KariyerAI ile planınızı çıkarın! 🚀**
+---
+
+## 🛠️ Sorun giderme
+
+| Sorun | Çözüm |
+|-------|--------|
+| `setup.bat` Python bulamıyor | Python’u PATH ile kur, yeni terminal |
+| Ollama bağlantı yok | Ollama uygulamasını aç |
+| Model yok | `ollama pull llama3.1:8b` |
+| Embedding hata | `ollama pull nomic-embed-text` |
+| PDF metin yok | Metin yapıştır |
+| Yavaş cevap | 8B model, diğer programları kapat |
+
+---
+
+## Lisans / not
+
+Eğitim ve kişisel kullanım. Tavsiyeler bilgilendirme amaçlıdır.
+
+**Kurulum:** `setup.bat` → **Çalıştır:** `start.bat` → http://localhost:8501 🚀

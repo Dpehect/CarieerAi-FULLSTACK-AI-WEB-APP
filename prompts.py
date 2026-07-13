@@ -1,240 +1,129 @@
 """
-KariyerAI - Prompt Şablonları
-Tüm sistem promptları ve kullanıcı prompt şablonları burada toplanır.
-LLM'e gönderilen her metin Türkçe ve net talimatlar içerir.
+KariyerAI — Prompt şablonları
+Kısa, yapılandırılmış, token-dostu. Çıktı formatı sabit (parse/okuma kolay).
 """
 
-# ---------------------------------------------------------------------------
-# Sistem promptu: AI'ın kimliği ve davranış kuralları
-# ---------------------------------------------------------------------------
-SYSTEM_PROMPT = """Sen KariyerAI'sın — profesyonel, samimi ve dürüst bir kariyer koçusun.
+SYSTEM_PROMPT = """Sen KariyerAI: dürüst, somut, Türkçe kariyer koçu.
+Kurallar: uydurma yok; CV/ilan metnine dayan; madde/tablo kullan; abartma.
+Cevapları gereksiz giriş cümlesi olmadan doğrudan başlıklarla ver."""
 
-Görevin:
-- Adayın CV'sini ve hedef iş ilanını derinlemesine analiz etmek
-- Beceri boşluklarını (gap analysis) net ve öncelikli şekilde göstermek
-- Gerçekçi, adım adım kariyer yol haritası (roadmap) önermek
-- CV iyileştirme, mülakat ve iş arama konularında somut tavsiyeler vermek
-
-Kuralların:
-1. Her zaman Türkçe yanıt ver (kullanıcı İngilizce isterse İngilizce de olur).
-2. Somut ol: genel laflar yerine örnek cümleler, madde listeleri, öncelik sıraları ver.
-3. Dürüst ol: zayıf yönleri yumuşatmadan ama yapıcı şekilde söyle.
-4. Veriye dayan: elindeki CV ve iş ilanı metinlerine referans ver.
-5. Uzun cevaplarda başlıklar (##), madde işaretleri ve tablolar kullan.
-6. Uydurma: bilmediğin şirket/maaş/istatistik uydurma; emin değilsen belirt.
-7. Motivasyon ver ama abartma; gerçekçi hedefler koy.
-"""
-
-# ---------------------------------------------------------------------------
-# CV + İş ilanı ile genel kariyer analizi
-# ---------------------------------------------------------------------------
-CAREER_ANALYSIS_PROMPT = """Aşağıda adayın CV metni ve hedef iş ilanı metni var.
-Bu iki belgeyi karşılaştırarak kapsamlı bir **kariyer analizi** yaz.
-
-## CV METNİ
+# Ortak belgeler — kısa yer tutucular
+_DOCS = """## CV
 {cv_text}
 
-## İŞ İLANI METNİ
+## İLAN
 {job_text}
 
-## RAG BAĞLAMI (ilgili parçalar)
+## RAG
 {context}
-
-Lütfen şu bölümleri sırayla doldur:
-
-### 1. Genel Uyum Özeti
-- Uyum skoru (0-100) ve kısa gerekçe
-- 3 güçlü yön
-- 3 risk / zayıf yön
-
-### 2. Deneyim Eşleşmesi
-- İş ilanındaki sorumluluklarla CV deneyimlerinin eşleşmesi
-- Eksik veya zayıf görünen deneyim alanları
-
-### 3. Teknik ve Soft Skill Değerlendirmesi
-- Eşleşen beceriler
-- Eksik ama kritik beceriler
-
-### 4. CV'de Öne Çıkarılması Gerekenler
-- Hangileri vurgulanmalı, nasıl yazılmalı (örnek cümlelerle)
-
-### 5. Sonuç ve İlk 3 Aksiyon
-- Adayın hemen yapabileceği 3 somut adım
 """
 
-# ---------------------------------------------------------------------------
-# Gap (beceri boşluğu) analizi
-# ---------------------------------------------------------------------------
-GAP_ANALYSIS_PROMPT = """Adayın CV'si ile hedef iş ilanını karşılaştırarak detaylı **Gap Analizi** yap.
-
-## CV METNİ
-{cv_text}
-
-## İŞ İLANI METNİ
-{job_text}
-
-## RAG BAĞLAMI
-{context}
-
-Çıktı formatı (mutlaka bu yapıda):
-
-### Gap Analizi Tablosu
-Her satır için: | Beceri / Gereksinim | İş İlanı Önemi | CV'de Durum | Gap Seviyesi | Öncelik |
-
-Gap Seviyesi: Yok / Düşük / Orta / Yüksek
-Öncelik: P0 (kritik) / P1 (önemli) / P2 (nice-to-have)
-
-### Kritik Gap'ler (P0)
-- Her biri için: ne eksik, neden önemli, nasıl kapatılır (1-2 cümle)
-
-### Orta Seviye Gap'ler (P1)
-- Kısa liste
-
-### Güçlü Eşleşmeler
-- İşe alımda artı puan getirecek eşleşmeler
-
-### Özet Skor Kartı
-- Teknik uyum: X/10
-- Deneyim uyumu: X/10
-- Soft skill / kültür ipuçları: X/10
-- Genel hazırlık: X/10
+CAREER_ANALYSIS_PROMPT = _DOCS + """
+## Görev: Kariyer uyum analizi (özlü)
+Şu yapıda yaz (fazla uzatma):
+### Uyum skoru: N/100 — 1 cümle gerekçe
+### 3 güçlü yön
+### 3 risk
+### Deneyim eşleşmesi (madde)
+### Skill: eşleşen | eksik-kritik
+### CV'de vurgula (2 örnek cümle)
+### İlk 3 aksiyon (bugün/bu hafta)
 """
 
-# ---------------------------------------------------------------------------
-# Kariyer yol haritası (roadmap)
-# ---------------------------------------------------------------------------
-ROADMAP_PROMPT = """Adayın mevcut profili ve hedef işi için **3-6-12 aylık kariyer yol haritası** oluştur.
-
-## CV METNİ
-{cv_text}
-
-## İŞ İLANI METNİ
-{job_text}
-
-## RAG BAĞLAMI
-{context}
-
-## Ek not (varsa)
-{extra_notes}
-
-Yol haritası şu yapıda olsun:
-
-### Hedef Rol Tanımı
-- Hedef unvan, seviye, ana yetkinlikler
-
-### 0-30 Gün (Hızlı Kazanımlar)
-- Haftalık checklist (somut görevler)
-- CV / LinkedIn güncellemeleri
-- Hızlı öğrenilebilecek skill'ler
-
-### 1-3 Ay
-- Öğrenme planı (kurs, proje, sertifika önerileri — gerçekçi isimler)
-- Portföy / GitHub / proje fikirleri
-- Network ve başvuru stratejisi
-
-### 3-6 Ay
-- Orta vadeli yetkinlik hedefleri
-- Deneyim biriktirme yolları (freelance, open source, yan proje)
-
-### 6-12 Ay
-- Uzun vadeli hedefe geçiş
-- Maaş / seviye beklentisi için hazırlık
-- Alternatif plan B (benzer roller)
-
-### Haftalık Rutin Önerisi
-- Çalışma saati dağılımı örneği
-
-### Başarı Ölçütleri (KPI)
-- Her dönem için ölçülebilir 3-5 metrik
+GAP_ANALYSIS_PROMPT = _DOCS + """
+## Görev: Gap analizi
+### Tablo (markdown): | Gereksinim | Önem | CV | Gap | Öncelik |
+Önem: Zorunlu/Tercih · Gap: Yok/Düşük/Orta/Yüksek · Öncelik: P0/P1/P2
+### P0 kritik gap'ler (nasıl kapatılır, 1 cümle)
+### Güçlü eşleşmeler
+### Skor kartı: Teknik/Deneyim/Soft /10
 """
 
-# ---------------------------------------------------------------------------
-# Serbest sohbet (chat) — RAG bağlamlı
-# ---------------------------------------------------------------------------
-CHAT_PROMPT = """Kullanıcı sorusu: {question}
-
-## Konuşma geçmişi (özet / son mesajlar)
-{chat_history}
-
-## İlgili belge parçaları (RAG)
-{context}
-
-## CV özeti (varsa)
-{cv_summary}
-
-## İş ilanı özeti (varsa)
-{job_summary}
-
-Yukarıdaki bağlamı kullanarak kariyer koçu olarak net, uygulanabilir ve samimi bir yanıt ver.
-Belge yoksa genel kariyer bilgine dayan; belgeler varsa mutlaka onlara atıf yap.
+ROADMAP_PROMPT = _DOCS + """
+## Ek: {extra_notes}
+## Görev: 3-6-12 ay yol haritası (somut checklist)
+### Hedef rol
+### 0-30 gün
+### 1-3 ay
+### 3-6 ay
+### 6-12 ay
+### Haftalık rutin (saat)
+### KPI (ölçülebilir 4 madde)
 """
 
-# ---------------------------------------------------------------------------
-# CV iyileştirme önerileri
-# ---------------------------------------------------------------------------
-CV_IMPROVE_PROMPT = """Aşağıdaki CV'yi hedef iş ilanına göre optimize et.
-
-## CV METNİ
-{cv_text}
-
-## İŞ İLANI METNİ
-{job_text}
-
-## RAG BAĞLAMI
-{context}
-
-Şunları üret:
-
-### 1. Profesyonel Özet (2-3 cümle) — yeni versiyon
-### 2. Anahtar kelime listesi (ilan + ATS uyumu)
-### 3. Deneyim maddeleri için yeniden yazım örnekleri (en az 3 madde: Eski → Yeni)
-### 4. Eksik bölüm önerileri (projeler, sertifikalar, beceriler)
-### 5. Kaçınılması gereken hatalar
-### 6. Son kontrol listesi (başvuru öncesi 10 madde)
+CV_IMPROVE_PROMPT = _DOCS + """
+## Görev: CV iyileştirme (ilan odaklı)
+### Profesyonel özet (2-3 cümle, yeni)
+### ATS anahtar kelimeler (10-15)
+### 3 deneyim maddesi: Eski → Yeni (etki odaklı)
+### Eksik bölümler
+### Kaçınılacaklar
+### Başvuru öncesi checklist (8 madde)
 """
 
-# ---------------------------------------------------------------------------
-# Mülakat hazırlığı
-# ---------------------------------------------------------------------------
-INTERVIEW_PREP_PROMPT = """Bu aday ve iş ilanı için mülakat hazırlık paketi oluştur.
-
-## CV METNİ
-{cv_text}
-
-## İŞ İLANI METNİ
-{job_text}
-
-## RAG BAĞLAMI
-{context}
-
-İçerik:
-
-### 1. Beklenen teknik sorular (8-10) + kısa cevap iskeleti
-### 2. Davranışsal sorular (STAR formatı ipuçlarıyla) — 5 soru
-### 3. Adayın sorması gereken sorular (işe alım uzmanına) — 6 soru
-### 4. Zayıf noktalar için hazır cevap stratejileri
-### 5. 60 saniyelik "kendini tanıt" metni (Türkçe)
+INTERVIEW_PREP_PROMPT = _DOCS + """
+## Görev: Mülakat paketi
+### 8 teknik soru + 1 satır cevap iskeleti
+### 5 davranışsal (STAR ipucu)
+### Adayın soracağı 5 soru
+### Zayıf nokta cevap stratejisi
+### 60 sn kendini tanıt metni
 """
 
-# ---------------------------------------------------------------------------
-# Kısa özet üretici (memory / sidebar için)
-# ---------------------------------------------------------------------------
-SUMMARY_PROMPT = """Aşağıdaki metni 3-5 cümlede özetle. Sadece özeti yaz, başka bir şey ekleme.
-
-METİN:
-{text}
+ATS_LLM_PROMPT = _DOCS + """
+## Yerel ATS ön-skor: {ats_local_score}/100
+## Anahtar kelime özeti: {ats_summary}
+## Görev: Kısa ATS yorumu (token tasarruflu)
+### ATS skoru (senin notun 0-100) + gerekçe
+### Kaçan kritik kelimeler (max 10)
+### Format/ATS riskleri
+### 5 hızlı düzeltme
 """
+
+FULL_REPORT_PROMPT = _DOCS + """
+## Yerel ATS: {ats_local_score}/100 · {ats_summary}
+## Görev: Tek seferlik yönetici özeti raporu
+### 1) Yönetici özeti (5 cümle)
+### 2) Uyum skoru + ATS skoru
+### 3) Kritik gap'ler (P0, max 5)
+### 4) CV aksiyonları (max 5)
+### 5) 30 günlük plan (haftalık)
+### 6) Mülakat: 3 olası soru
+Uzun paragraf yazma; madde tercih et.
+"""
+
+CHAT_PROMPT = """Soru: {question}
+Geçmiş: {chat_history}
+RAG: {context}
+CV özet: {cv_summary}
+İlan özet: {job_summary}
+Kariyer koçu olarak net, uygulanabilir yanıt ver. Belgeler varsa atıf yap."""
+
+COVER_LETTER_PROMPT = _DOCS + """
+## Görev: Türkçe motivasyon mektubu (ilan odaklı)
+### Versiyon A — kısa (180-220 kelime)
+### Versiyon B — standart (280-350 kelime)
+Kurallar: uydurma deneyim yok; CV'deki gerçeklere dayan; abartma; somut 1-2 başarı.
+Son: nazik kapanış + görüşme isteği. İmza: [Ad Soyad]
+"""
+
+LINKEDIN_PROMPT = _DOCS + """
+## Görev: LinkedIn profil metinleri (ilan hedefine göre)
+### Headline (max 220 karakter, TR)
+### About (3 kısa paragraf)
+### Featured skills (10 madde, öncelik sırası)
+### Open-to-work notu (1 cümle, profesyonel)
+Uydurma unvan/şirket yok.
+"""
+
+SUMMARY_PROMPT = """3-4 cümlede özetle, başka bir şey yazma:\n{text}"""
 
 
 def build_prompt(template: str, **kwargs) -> str:
-    """
-    Şablondaki {placeholder} alanlarını doldurur.
-    Eksik anahtarlar boş string ile değiştirilir (KeyError olmaz).
-    """
-    safe = {k: (v if v is not None else "") for k, v in kwargs.items()}
-    # Şablonda olup kwargs'ta olmayanlar için boş string
-    class _SafeDict(dict):
+    """Eksik anahtarlar boş string; KeyError yok."""
+
+    class _Safe(dict):
         def __missing__(self, key):
             return ""
 
-    return template.format_map(_SafeDict(**safe))
+    return template.format_map(_Safe(**{k: (v if v is not None else "") for k, v in kwargs.items()}))
