@@ -1,9 +1,13 @@
 /**
- * Pathora Landing — full-page product experience
- * React + TS + Tailwind + Framer Motion + R3F
+ * Pathora — product landing (production)
+ * Stack: React, TypeScript, Tailwind, Framer Motion, React Three Fiber
  *
- * Design: deep void navy, teal (#22d3ee) + violet (#a855f7),
- * hero 3D orb, scroll parallax, 3D tilt cards, rich micro-motion.
+ * Composition:
+ *  - Cinematic hero (copy left · 3D intelligence core right)
+ *  - Floating feature constellation (bento + tilt)
+ *  - Process rail
+ *  - CTA theater
+ * Motion: page progress, parallax layers, staggered reveals, hover physics
  */
 import {
   AnimatePresence,
@@ -32,81 +36,135 @@ const NeuralScene = lazy(() =>
 
 const REPO = "https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP";
 
-const FEATURES = [
+const FEATURES: { title: string; body: string; span?: string }[] = [
   {
-    title: "Instant ATS score",
-    desc: "Keyword + format signals before the LLM runs—see what recruiters' systems notice first.",
-    icon: "01",
+    title: "ATS in milliseconds",
+    body: "Local keyword & structure scoring before any model call—instant signal, zero wait.",
+    span: "sm:col-span-2",
   },
   {
-    title: "RAG grounded answers",
-    desc: "ChromaDB retrieves real CV & job chunks so every insight stays document-true.",
-    icon: "02",
+    title: "Grounded RAG",
+    body: "ChromaDB retrieval keeps every recommendation tied to your documents.",
   },
   {
-    title: "Gap map & roadmap",
-    desc: "Prioritized skill gaps with a calm 30 / 90 / 365-day execution plan.",
-    icon: "03",
+    title: "Gap intelligence",
+    body: "Prioritized skill gaps with severity and a practical close-the-gap path.",
   },
   {
-    title: "Cover letter & LinkedIn",
-    desc: "Role-specific drafts shaped by your real experience—not generic templates.",
-    icon: "04",
+    title: "Letters & LinkedIn",
+    body: "Drafts that read like you—not a template farm.",
+    span: "sm:col-span-2",
   },
   {
-    title: "Export-ready reports",
-    desc: "Markdown and HTML you can print to PDF. Share with mentors or keep offline.",
-    icon: "05",
+    title: "Export suite",
+    body: "Markdown + print-ready HTML. PDF in one browser print.",
   },
   {
-    title: "100% local · free",
-    desc: "Ollama on your machine. No API keys. Your career data never leaves the device.",
-    icon: "06",
+    title: "Private by default",
+    body: "Ollama on localhost. No API keys. Data stays on disk.",
   },
-] as const;
+];
 
 const STEPS = [
-  { n: "01", t: "Install", d: "setup.bat — env, packages, models." },
-  { n: "02", t: "Launch", d: "start.bat — open localhost:8501." },
-  { n: "03", t: "Upload", d: "CV + job post, or load demo data." },
-  { n: "04", t: "Decide", d: "Score, analyze, draft, export." },
-] as const;
+  { id: "01", title: "Bootstrap", text: "One installer. Models included." },
+  { id: "02", title: "Open", text: "Streamlit UI on localhost." },
+  { id: "03", title: "Index", text: "CV + job post as PDF or text." },
+  { id: "04", title: "Decide", text: "Score, plan, draft, export." },
+];
 
-/* ========================================================================== */
-/* Shared motion                                                               */
-/* ========================================================================== */
+const EASE = [0.16, 1, 0.3, 1] as const;
 
-const easeOut = [0.22, 1, 0.36, 1] as const;
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Primitives                                                                 */
+/* ────────────────────────────────────────────────────────────────────────── */
 
 function Reveal({
   children,
   className = "",
   delay = 0,
-  y = 28,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
-  y?: number;
 }) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y, filter: "blur(6px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.75, delay, ease: easeOut }}
+      initial={{ opacity: 0, y: 36 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.85, delay, ease: EASE }}
     >
       {children}
     </motion.div>
   );
 }
 
-/* ========================================================================== */
-/* 3D tilt card                                                                */
-/* ========================================================================== */
+function MagneticButton({
+  children,
+  className,
+  href,
+  onClick,
+}: {
+  children: ReactNode;
+  className?: string;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLAnchorElement | HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 280, damping: 18 });
+  const sy = useSpring(y, { stiffness: 280, damping: 18 });
 
-function TiltCard({
+  const move = (e: MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    x.set((e.clientX - r.left - r.width / 2) * 0.22);
+    y.set((e.clientY - r.top - r.height / 2) * 0.22);
+  };
+  const leave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const style = { x: sx, y: sy };
+  if (href) {
+    return (
+      <motion.a
+        ref={ref as React.RefObject<HTMLAnchorElement>}
+        href={href}
+        target={href.startsWith("http") ? "_blank" : undefined}
+        rel={href.startsWith("http") ? "noreferrer" : undefined}
+        onMouseMove={move}
+        onMouseLeave={leave}
+        style={style}
+        whileTap={{ scale: 0.97 }}
+        className={className}
+      >
+        {children}
+      </motion.a>
+    );
+  }
+  return (
+    <motion.button
+      ref={ref as React.RefObject<HTMLButtonElement>}
+      type="button"
+      onClick={onClick}
+      onMouseMove={move}
+      onMouseLeave={leave}
+      style={style}
+      whileTap={{ scale: 0.97 }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/** Floating bento tile with 3D tilt + luminous hover. */
+function FloatCard({
   children,
   className = "",
   delay = 0,
@@ -116,56 +174,43 @@ function TiltCard({
   delay?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rx = useSpring(useTransform(my, [-0.5, 0.5], [10, -10]), { stiffness: 200, damping: 20 });
-  const ry = useSpring(useTransform(mx, [-0.5, 0.5], [-12, 12]), { stiffness: 200, damping: 20 });
-  const glowX = useTransform(mx, [-0.5, 0.5], [0, 100]);
-  const glowY = useTransform(my, [-0.5, 0.5], [0, 100]);
-  const glow = useMotionTemplate`radial-gradient(500px circle at ${glowX}% ${glowY}%, rgba(34,211,238,0.14), rgba(168,85,247,0.08) 35%, transparent 55%)`;
+  const mx = useMotionValue(0.5);
+  const my = useMotionValue(0.5);
+  const rx = useSpring(useTransform(my, [0, 1], [8, -8]), { stiffness: 180, damping: 16 });
+  const ry = useSpring(useTransform(mx, [0, 1], [-10, 10]), { stiffness: 180, damping: 16 });
+  const glow = useMotionTemplate`radial-gradient(420px circle at ${useTransform(mx, (v) => v * 100)}% ${useTransform(my, (v) => v * 100)}%, rgba(34,211,238,0.16), rgba(168,85,247,0.08) 40%, transparent 60%)`;
 
   const onMove = (e: MouseEvent) => {
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    mx.set((e.clientX - r.left) / r.width - 0.5);
-    my.set((e.clientY - r.top) / r.height - 0.5);
-  };
-
-  const onLeave = () => {
-    mx.set(0);
-    my.set(0);
+    mx.set((e.clientX - r.left) / r.width);
+    my.set((e.clientY - r.top) / r.height);
   };
 
   return (
-    <Reveal delay={delay} className="h-full [perspective:1000px]">
+    <Reveal delay={delay} className={`h-full [perspective:1200px] ${className}`}>
       <motion.div
         ref={ref}
         onMouseMove={onMove}
-        onMouseLeave={onLeave}
+        onMouseLeave={() => {
+          mx.set(0.5);
+          my.set(0.5);
+        }}
         style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }}
-        whileHover={{ scale: 1.03, z: 20 }}
-        transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        className={`group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-void-800/80 shadow-card ${className}`}
+        whileHover={{ scale: 1.02, z: 40 }}
+        transition={{ type: "spring", stiffness: 240, damping: 20 }}
+        className="relative h-full overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-night-800/70 shadow-float backdrop-blur-md"
       >
-        <motion.div
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ backgroundImage: glow }}
-        />
+        <motion.div className="pointer-events-none absolute inset-0 opacity-80" style={{ backgroundImage: glow }} />
         <div
-          className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             background:
-              "linear-gradient(135deg, rgba(34,211,238,0.35), transparent 40%, rgba(168,85,247,0.35))",
-            mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            WebkitMask:
-              "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            maskComposite: "exclude",
-            WebkitMaskComposite: "xor",
-            padding: 1,
+              "linear-gradient(135deg, rgba(34,211,238,0.08), transparent 40%, rgba(168,85,247,0.08))",
           }}
         />
-        <div className="relative h-full" style={{ transform: "translateZ(24px)" }}>
+        <div className="relative h-full p-6 sm:p-7" style={{ transform: "translateZ(28px)" }}>
           {children}
         </div>
       </motion.div>
@@ -173,15 +218,15 @@ function TiltCard({
   );
 }
 
-/* ========================================================================== */
-/* Nav + progress                                                              */
-/* ========================================================================== */
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Chrome                                                                     */
+/* ────────────────────────────────────────────────────────────────────────── */
 
-function ProgressBar({ progress }: { progress: MotionValue<number> }) {
-  const scaleX = useSpring(progress, { stiffness: 100, damping: 30 });
+function Progress({ p }: { p: MotionValue<number> }) {
+  const scaleX = useSpring(p, { stiffness: 90, damping: 28 });
   return (
     <motion.div
-      className="fixed left-0 right-0 top-0 z-[70] h-[2px] origin-left bg-gradient-to-r from-teal-glow via-white to-violet-glow"
+      className="fixed inset-x-0 top-0 z-[80] h-[2px] origin-left bg-gradient-to-r from-aqua via-white to-plum"
       style={{ scaleX }}
     />
   );
@@ -189,273 +234,221 @@ function ProgressBar({ progress }: { progress: MotionValue<number> }) {
 
 function Nav() {
   const { scrollY } = useScroll();
-  const bg = useTransform(scrollY, [0, 80], ["rgba(3,5,10,0)", "rgba(3,5,10,0.8)"]);
-  const border = useTransform(
-    scrollY,
-    [0, 80],
-    ["rgba(255,255,255,0)", "rgba(255,255,255,0.08)"]
-  );
+  const bg = useTransform(scrollY, [0, 60], ["rgba(2,4,10,0)", "rgba(2,4,10,0.78)"]);
+  const line = useTransform(scrollY, [0, 60], [0, 1]);
 
   return (
     <motion.header
-      style={{ backgroundColor: bg, borderBottomColor: border }}
-      className="fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl"
-      initial={{ y: -40, opacity: 0 }}
+      style={{ backgroundColor: bg }}
+      className="fixed inset-x-0 top-0 z-50 backdrop-blur-xl"
+      initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.7, ease: easeOut }}
+      transition={{ duration: 0.7, ease: EASE }}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-        <motion.a href="#top" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-          <BrandLogo size={32} />
-        </motion.a>
-        <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
+      <motion.div className="absolute inset-x-0 bottom-0 h-px bg-white/10" style={{ opacity: line }} />
+      <div className="shell flex h-[4.25rem] items-center justify-between">
+        <a href="#top">
+          <BrandLogo />
+        </a>
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 gap-9 text-[13px] text-white/55 md:flex">
           {[
-            ["Features", "#features"],
-            ["How it works", "#how"],
-            ["Stack", "#stack"],
-          ].map(([label, href], i) => (
-            <motion.a
-              key={href}
-              href={href}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 + i * 0.06 }}
-              className="transition hover:text-white"
-              whileHover={{ y: -1 }}
-            >
+            ["Product", "#product"],
+            ["Process", "#process"],
+            ["Start", "#start"],
+          ].map(([label, href]) => (
+            <a key={href} href={href} className="transition hover:text-white">
               {label}
-            </motion.a>
+            </a>
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <motion.a
-            href={REPO}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-ghost !px-4 !py-2 text-xs sm:text-sm"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-          >
+          <MagneticButton href={REPO} className="btn-line !px-4 !py-2 text-xs">
             GitHub
-          </motion.a>
-          <motion.a
-            href="#cta"
-            className="btn-primary !px-4 !py-2 text-xs sm:text-sm"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-          >
+          </MagneticButton>
+          <MagneticButton href="#start" className="btn-solid !px-4 !py-2 text-xs">
             Get Pathora
-          </motion.a>
+          </MagneticButton>
         </div>
       </div>
     </motion.header>
   );
 }
 
-/* ========================================================================== */
-/* Hero                                                                        */
-/* ========================================================================== */
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Hero                                                                       */
+/* ────────────────────────────────────────────────────────────────────────── */
 
-function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const yText = useTransform(scrollYProgress, [0, 0.25], [0, -80]);
-  const yOrb = useTransform(scrollYProgress, [0, 0.3], [0, 120]);
-  const orbOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0.15]);
-  const [scrollVal, setScrollVal] = useState(0);
+function Hero({ progress }: { progress: MotionValue<number> }) {
+  const yCopy = useTransform(progress, [0, 0.28], [0, -90]);
+  const yScene = useTransform(progress, [0, 0.32], [0, 140]);
+  const sceneOp = useTransform(progress, [0, 0.38], [1, 0.12]);
+  const [scroll3d, setScroll3d] = useState(0);
 
-  // Bridge MotionValue → number for R3F orb tilt
-  useEffect(() => {
-    return scrollYProgress.on("change", (v) => {
-      setScrollVal(Math.min(1, Math.max(0, v / 0.4)));
-    });
-  }, [scrollYProgress]);
+  useEffect(() => progress.on("change", (v) => setScroll3d(Math.min(1, v / 0.35))), [progress]);
 
   return (
-    <section id="top" className="relative min-h-[100svh] overflow-hidden pt-16">
-      {/* Mesh atmosphere */}
-      <div className="pointer-events-none absolute inset-0 bg-mesh" />
+    <section id="top" className="relative min-h-[100svh] overflow-hidden pt-[4.25rem]">
+      {/* Atmospheric layers */}
       <div className="pointer-events-none absolute inset-0">
-        <motion.div
-          className="absolute left-[10%] top-[20%] h-72 w-72 rounded-full bg-teal-glow/20 blur-[100px]"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.55, 0.35] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        <div className="absolute -left-32 top-24 h-[28rem] w-[28rem] animate-drift rounded-full bg-aqua/15 blur-[110px]" />
+        <div
+          className="absolute -right-20 top-10 h-[32rem] w-[32rem] animate-drift rounded-full bg-plum/15 blur-[120px]"
+          style={{ animationDelay: "2s" }}
         />
-        <motion.div
-          className="absolute right-[5%] top-[10%] h-96 w-96 rounded-full bg-violet-glow/20 blur-[110px]"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        <div
+          className="absolute bottom-0 left-1/3 h-64 w-64 animate-floaty rounded-full bg-ice/10 blur-[90px]"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+            maskImage: "radial-gradient(ellipse at center, black 20%, transparent 75%)",
+          }}
         />
       </div>
 
-      {/* 3D orb */}
+      {/* 3D layer */}
       <motion.div
-        style={{ y: yOrb, opacity: orbOpacity }}
-        className="pointer-events-none absolute inset-y-0 right-0 w-full md:w-[58%]"
+        style={{ y: yScene, opacity: sceneOp }}
+        className="pointer-events-none absolute inset-y-0 right-0 w-full lg:w-[56%]"
       >
         <Suspense
           fallback={
-            <div className="absolute inset-0 animate-pulseGlow bg-gradient-to-br from-teal-glow/10 to-violet-glow/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-aqua/10 via-transparent to-plum/10" />
           }
         >
-          <NeuralScene scroll={scrollVal} />
+          <NeuralScene scroll={scroll3d} />
         </Suspense>
       </motion.div>
 
-      <motion.div
-        style={{ y: yText }}
-        className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-6xl flex-col justify-center px-5 py-20 sm:px-8"
-      >
-        <div className="max-w-xl lg:max-w-2xl">
+      <motion.div style={{ y: yCopy }} className="shell relative z-10 flex min-h-[calc(100svh-4.25rem)] items-center py-20">
+        <div className="max-w-xl lg:max-w-[34rem]">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: easeOut }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-glow/25 bg-teal-glow/10 px-3 py-1.5 text-xs font-medium text-teal-soft"
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.65, ease: EASE }}
+            className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[12px] text-white/70"
           >
-            <motion.span
-              className="h-1.5 w-1.5 rounded-full bg-teal-glow"
-              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-              transition={{ duration: 1.6, repeat: Infinity }}
-            />
-            Local AI career intelligence · No API key
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inset-0 animate-ping rounded-full bg-aqua/70" />
+              <span className="relative h-2 w-2 rounded-full bg-aqua" />
+            </span>
+            On-device AI · Zero API keys
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 32 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.85, delay: 0.08, ease: easeOut }}
-            className="font-display text-4xl font-bold leading-[1.05] tracking-tightest text-white sm:text-5xl lg:text-6xl"
+            transition={{ duration: 0.95, delay: 0.05, ease: EASE }}
+            className="font-display text-[2.85rem] font-semibold leading-[1.02] tracking-display text-white sm:text-6xl"
           >
-            Your career path,{" "}
-            <span className="gradient-text">illuminated by AI</span>
-            <span className="text-white/90">—on your machine.</span>
+            Clarity for every
+            <br />
+            <span className="text-shine">career decision.</span>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.18, ease: easeOut }}
-            className="mt-6 max-w-lg text-base leading-relaxed text-white/60 sm:text-lg"
+            transition={{ duration: 0.85, delay: 0.16, ease: EASE }}
+            className="mt-6 max-w-md text-[15px] leading-relaxed text-white/55 sm:text-base"
           >
-            Pathora analyzes your CV and target role with Ollama: ATS scores, skill gaps,
-            roadmaps, cover letters, and full reports—without sending data to the cloud.
+            Pathora is a local career intelligence suite—ATS scoring, skill gaps,
+            roadmaps, and drafts—running privately on your machine with Ollama.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.28, ease: easeOut }}
+            transition={{ duration: 0.8, delay: 0.26, ease: EASE }}
             className="mt-9 flex flex-wrap gap-3"
           >
-            <motion.a
-              href="#cta"
-              className="btn-primary"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(34,211,238,0.35)" }}
-              whileTap={{ scale: 0.97 }}
-            >
+            <MagneticButton href="#start" className="btn-solid">
               Start free
-              <motion.span
-                aria-hidden
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
-              >
-                →
-              </motion.span>
-            </motion.a>
-            <motion.a
-              href="#features"
-              className="btn-ghost"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Explore features
-            </motion.a>
+              <span className="opacity-50">→</span>
+            </MagneticButton>
+            <MagneticButton href="#product" className="btn-line">
+              See product
+            </MagneticButton>
           </motion.div>
 
-          <motion.dl
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.08, delayChildren: 0.4 } },
-            }}
-            className="mt-12 grid grid-cols-3 gap-4 sm:max-w-md"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="mt-14 flex flex-wrap gap-8 border-t border-white/[0.07] pt-8"
           >
             {[
-              ["0", "API keys"],
-              ["100%", "On-device"],
-              ["ATS+", "Instant"],
-            ].map(([k, l]) => (
+              ["Private", "100% local runtime"],
+              ["Fast ATS", "No model wait"],
+              ["Full stack", "Analyze → export"],
+            ].map(([k, v], i) => (
               <motion.div
-                key={l}
-                variants={{
-                  hidden: { opacity: 0, y: 16 },
-                  show: { opacity: 1, y: 0, transition: { ease: easeOut } },
-                }}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3 backdrop-blur-sm"
+                key={k}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 + i * 0.08, ease: EASE }}
               >
-                <dt className="font-display text-lg font-semibold text-white sm:text-xl">{k}</dt>
-                <dd className="text-[11px] uppercase tracking-wider text-white/45">{l}</dd>
+                <div className="font-display text-sm font-semibold text-white">{k}</div>
+                <div className="mt-0.5 text-[12px] text-white/40">{v}</div>
               </motion.div>
             ))}
-          </motion.dl>
+          </motion.div>
         </div>
+      </motion.div>
 
+      <motion.div
+        className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+      >
+        <span className="text-[10px] uppercase tracking-[0.28em] text-white/30">Scroll</span>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
-        >
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/35">Scroll</span>
-          <motion.span
-            className="h-10 w-px bg-gradient-to-b from-teal-glow to-transparent"
-            animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.4, 1, 0.4] }}
-            transition={{ duration: 1.8, repeat: Infinity }}
-          />
-        </motion.div>
+          className="h-9 w-px origin-top bg-gradient-to-b from-aqua to-transparent"
+          animate={{ scaleY: [0.5, 1, 0.5], opacity: [0.35, 1, 0.35] }}
+          transition={{ duration: 1.9, repeat: Infinity }}
+        />
       </motion.div>
     </section>
   );
 }
 
-/* ========================================================================== */
-/* Sections                                                                    */
-/* ========================================================================== */
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Product (floating cards)                                                   */
+/* ────────────────────────────────────────────────────────────────────────── */
 
-function Features() {
+function Product() {
   return (
-    <section id="features" className="relative py-28 sm:py-32">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-glow/40 to-transparent" />
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <Reveal className="mx-auto mb-14 max-w-2xl text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-soft">
-            Capabilities
+    <section id="product" className="relative py-28 sm:py-32">
+      <div className="shell">
+        <Reveal className="max-w-2xl">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-aqua/90">
+            Product
           </p>
-          <h2 className="font-display text-3xl font-bold tracking-tightest text-white sm:text-4xl">
-            Built to feel like a product,{" "}
-            <span className="gradient-text">not a weekend demo.</span>
+          <h2 className="font-display text-3xl font-semibold tracking-display text-white sm:text-5xl">
+            A composed system for
+            <span className="text-white/45"> serious applications.</span>
           </h2>
-          <p className="mt-4 text-white/55">
-            Hover the cards—subtle 3D tilt, glow, and depth for a tactile UI.
+          <p className="mt-4 max-w-lg text-[15px] text-white/50">
+            Floating panels, intentional hierarchy—tools that feel designed, not assembled.
           </p>
         </Reveal>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
-            <TiltCard key={f.title} delay={i * 0.06}>
-              <div className="flex h-full flex-col p-6 sm:p-7">
-                <span className="font-mono text-xs text-teal-glow/80">{f.icon}</span>
-                <h3 className="mt-4 font-display text-lg font-semibold text-white">{f.title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-white/55">{f.desc}</p>
-                <motion.div
-                  className="mt-5 h-px w-full origin-left bg-gradient-to-r from-teal-glow/60 via-violet-glow/40 to-transparent"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.1 + i * 0.05, ease: easeOut }}
-                />
+            <FloatCard key={f.title} delay={i * 0.05} className={f.span ?? ""}>
+              <div className="flex h-full min-h-[160px] flex-col">
+                <div className="mb-5 h-px w-10 bg-gradient-to-r from-aqua to-plum" />
+                <h3 className="font-display text-lg font-semibold tracking-tight text-white">
+                  {f.title}
+                </h3>
+                <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-white/50">{f.body}</p>
               </div>
-            </TiltCard>
+            </FloatCard>
           ))}
         </div>
       </div>
@@ -463,36 +456,36 @@ function Features() {
   );
 }
 
-function How() {
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Process                                                                    */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function Process() {
   return (
-    <section id="how" className="relative py-24 sm:py-28">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section id="process" className="relative py-24">
+      <div className="shell">
         <Reveal className="mb-12 max-w-xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-violet-soft">
-            Workflow
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-orchid">
+            Process
           </p>
-          <h2 className="font-display text-3xl font-bold tracking-tightest text-white sm:text-4xl">
-            Four steps. Full control.
+          <h2 className="font-display text-3xl font-semibold tracking-display text-white sm:text-4xl">
+            From zero to decision in four beats.
           </h2>
         </Reveal>
 
-        <div className="relative grid gap-4 md:grid-cols-4">
-          <div className="pointer-events-none absolute left-[10%] right-[10%] top-8 hidden h-px bg-gradient-to-r from-teal-glow/0 via-teal-glow/40 to-violet-glow/0 md:block" />
+        <div className="relative grid gap-3 md:grid-cols-4">
+          <div className="pointer-events-none absolute left-[6%] right-[6%] top-[2.1rem] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
           {STEPS.map((s, i) => (
-            <Reveal key={s.n} delay={i * 0.08}>
-              <motion.div
-                whileHover={{ y: -6, borderColor: "rgba(34,211,238,0.35)" }}
-                className="rounded-3xl border border-white/10 bg-void-800/60 p-5 backdrop-blur-sm"
+            <Reveal key={s.id} delay={i * 0.07}>
+              <motion.article
+                whileHover={{ y: -8 }}
+                transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                className="rounded-2xl border border-white/[0.08] bg-night-800/50 p-5 backdrop-blur"
               >
-                <motion.span
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-teal-glow/20 to-violet-glow/20 font-mono text-xs text-teal-soft ring-1 ring-white/10"
-                  whileHover={{ scale: 1.1, rotate: 6 }}
-                >
-                  {s.n}
-                </motion.span>
-                <h3 className="mt-4 font-display text-xl font-semibold text-white">{s.t}</h3>
-                <p className="mt-2 text-sm text-white/50">{s.d}</p>
-              </motion.div>
+                <span className="font-mono text-[11px] text-aqua">{s.id}</span>
+                <h3 className="mt-3 font-display text-xl font-semibold text-white">{s.title}</h3>
+                <p className="mt-2 text-sm text-white/45">{s.text}</p>
+              </motion.article>
             </Reveal>
           ))}
         </div>
@@ -501,41 +494,47 @@ function How() {
   );
 }
 
-function Stack() {
-  const items = ["Ollama", "Streamlit", "ChromaDB", "PyMuPDF", "nomic-embed", "llama3.1"];
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Marquee strip                                                              */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function Strip() {
+  const items = [
+    "Ollama",
+    "Streamlit",
+    "ChromaDB",
+    "PyMuPDF",
+    "nomic-embed",
+    "llama3.1",
+    "Local-first",
+    "No API keys",
+  ];
+  const row = [...items, ...items];
   return (
-    <section id="stack" className="py-20">
-      <div className="mx-auto max-w-6xl px-5 text-center sm:px-8">
-        <Reveal>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-            Stack
-          </p>
-          <h2 className="font-display text-2xl font-bold tracking-tightest text-white sm:text-3xl">
-            Serious tools. <span className="gradient-text">Zero cloud bill.</span>
-          </h2>
-        </Reveal>
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {items.map((item, i) => (
-            <Reveal key={item} delay={i * 0.05}>
-              <motion.span
-                whileHover={{
-                  scale: 1.08,
-                  borderColor: "rgba(34,211,238,0.5)",
-                  boxShadow: "0 0 24px rgba(34,211,238,0.2)",
-                }}
-                className="inline-flex rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 font-mono text-xs text-white/70 sm:text-sm"
-              >
-                {item}
-              </motion.span>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
+    <div className="relative overflow-hidden border-y border-white/[0.06] py-5">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-night-950 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-night-950 to-transparent" />
+      <motion.div
+        className="flex w-max gap-10 whitespace-nowrap"
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+      >
+        {row.map((t, i) => (
+          <span key={`${t}-${i}`} className="font-mono text-xs uppercase tracking-[0.2em] text-white/35">
+            {t}
+            <span className="ml-10 text-aqua/40">◆</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
   );
 }
 
-function CTA() {
+/* ────────────────────────────────────────────────────────────────────────── */
+/* CTA                                                                        */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+function Start() {
   const [copied, setCopied] = useState(false);
   const cmd = `git clone ${REPO}`;
 
@@ -543,90 +542,64 @@ function CTA() {
     try {
       await navigator.clipboard.writeText(cmd);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1700);
+      window.setTimeout(() => setCopied(false), 1600);
     } catch {
       /* ignore */
     }
   };
 
   return (
-    <section id="cta" className="pb-28 pt-10">
-      <div className="mx-auto max-w-5xl px-5 sm:px-8">
+    <section id="start" className="py-28">
+      <div className="shell">
         <Reveal>
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-void-700 via-void-900 to-void-950 p-8 shadow-glow-cta sm:p-12"
-          >
-            <motion.div
-              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-teal-glow/25 blur-3xl"
-              animate={{ x: [0, 20, 0], y: [0, 15, 0] }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="pointer-events-none absolute -bottom-24 -left-16 h-80 w-80 rounded-full bg-violet-glow/20 blur-3xl"
-              animate={{ x: [0, -15, 0], y: [0, -10, 0] }}
-              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-night-700 via-night-900 to-night-950 p-8 shadow-glow-aqua sm:p-14">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 animate-drift rounded-full bg-aqua/20 blur-3xl" />
+            <div
+              className="pointer-events-none absolute -bottom-20 -left-10 h-80 w-80 animate-drift rounded-full bg-plum/20 blur-3xl"
+              style={{ animationDelay: "3s" }}
             />
 
             <div className="relative max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-soft">
-                Call to action
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-aqua">
+                Get started
               </p>
-              <h2 className="mt-3 font-display text-3xl font-bold tracking-tightest text-white sm:text-4xl">
-                Install once.{" "}
-                <span className="gradient-text">Own the workflow.</span>
+              <h2 className="mt-3 font-display text-3xl font-semibold tracking-display text-white sm:text-5xl">
+                Install once.
+                <br />
+                <span className="text-shine">Ship your next application.</span>
               </h2>
-              <p className="mt-4 text-white/60">
-                This site is the product page. Pathora runs on your computer—clone,
-                setup, start.
+              <p className="mt-4 text-[15px] text-white/55">
+                This page is the brochure. Pathora runs on your computer—clone, setup, start.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <motion.a
-                  href={REPO}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-primary"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  Open repository
-                </motion.a>
-                <motion.button
-                  type="button"
-                  onClick={copy}
-                  className="btn-ghost min-w-[12rem]"
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                >
+              <div className="mt-9 flex flex-wrap gap-3">
+                <MagneticButton href={REPO} className="btn-solid">
+                  Open GitHub
+                </MagneticButton>
+                <MagneticButton onClick={copy} className="btn-line min-w-[11.5rem]">
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
-                      key={copied ? "ok" : "copy"}
-                      initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-                      transition={{ duration: 0.2 }}
+                      key={copied ? "1" : "0"}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18 }}
                     >
-                      {copied ? "Copied to clipboard" : "Copy clone command"}
+                      {copied ? "Copied" : "Copy clone command"}
                     </motion.span>
                   </AnimatePresence>
-                </motion.button>
+                </MagneticButton>
               </div>
 
-              <motion.pre
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 font-mono text-xs leading-relaxed text-teal-soft/90 sm:text-sm"
-              >
+              <pre className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-[12px] leading-relaxed text-ice/90">
                 {`${cmd}
 cd CarieerAi-FULLSTACK-AI-WEB-APP
 setup.bat
 start.bat
 # → http://localhost:8501`}
-              </motion.pre>
+              </pre>
             </div>
-          </motion.div>
+          </div>
         </Reveal>
       </div>
     </section>
@@ -635,51 +608,45 @@ start.bat
 
 function Footer() {
   return (
-    <footer className="border-t border-white/10 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-8">
+    <footer className="border-t border-white/[0.06] py-10">
+      <div className="shell flex flex-col items-center justify-between gap-5 sm:flex-row">
         <div className="flex items-center gap-3">
           <BrandLogo size={28} />
-          <span className="text-sm text-white/40">Local AI career intelligence</span>
+          <span className="text-[13px] text-white/35">Local AI career intelligence</span>
         </div>
-        <div className="flex gap-6 text-sm text-white/45">
-          {[
-            ["GitHub", REPO],
-            ["Features", "#features"],
-            ["Setup", "#cta"],
-          ].map(([label, href]) => (
-            <motion.a
-              key={label}
-              href={href}
-              target={href.startsWith("http") ? "_blank" : undefined}
-              rel={href.startsWith("http") ? "noreferrer" : undefined}
-              whileHover={{ color: "#fff", y: -1 }}
-            >
-              {label}
-            </motion.a>
-          ))}
+        <div className="flex gap-6 text-[13px] text-white/40">
+          <a className="hover:text-white" href={REPO} target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+          <a className="hover:text-white" href="#product">
+            Product
+          </a>
+          <a className="hover:text-white" href="#start">
+            Start
+          </a>
         </div>
       </div>
     </footer>
   );
 }
 
-/* ========================================================================== */
-/* Page root                                                                   */
-/* ========================================================================== */
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Page                                                                       */
+/* ────────────────────────────────────────────────────────────────────────── */
 
 export function LandingPage() {
   const { scrollYProgress } = useScroll();
 
   return (
-    <div className="min-h-screen bg-void-950 text-white">
-      <ProgressBar progress={scrollYProgress} />
+    <div className="min-h-screen bg-night-950 text-white">
+      <Progress p={scrollYProgress} />
       <Nav />
       <main>
-        <Hero scrollYProgress={scrollYProgress} />
-        <Features />
-        <How />
-        <Stack />
-        <CTA />
+        <Hero progress={scrollYProgress} />
+        <Strip />
+        <Product />
+        <Process />
+        <Start />
       </main>
       <Footer />
     </div>
