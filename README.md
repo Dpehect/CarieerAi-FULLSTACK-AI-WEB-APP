@@ -360,6 +360,69 @@ Veriler `data/chroma_db/` altında yerelde saklanır; dışarı API çağrısı 
 
 ---
 
+# ⚠️ Vercel / Netlify / bulut deploy çalışmaz
+
+Bu proje **bilerek yerel**dir. Şunlara bağımlıdır:
+
+| Bileşen | Neden bulutta sorun? |
+|--------|----------------------|
+| **Ollama** | Bilgisayarında çalışan yerel LLM sunucusu (`localhost:11434`). Vercel’de Ollama yok. |
+| **Streamlit** | `streamlit run main.py` ile ayakta duran uzun ömürlü web app. Vercel ise kısa ömürlü **serverless function** bekler (`app` / `handler` export). |
+| **ChromaDB** | Diskte kalıcı vektör DB (`data/chroma_db/`). Serverless ortamda kalıcı disk yok / uygun değil. |
+
+Bu yüzden Vercel log’unda şu hata **normaldir**:
+
+```text
+Found main.py but it does not export a top-level "app", "application", or "handler" variable.
+```
+
+**Ne yapmalısın?**
+
+1. Vercel projesini bu repo için **kapat / sil** (veya deploy’u durdur).  
+2. Uygulamayı **kendi bilgisayarında** çalıştır:
+
+```powershell
+cd C:\Users\USER\Desktop\tries\aicoach
+.\.venv\Scripts\Activate.ps1
+streamlit run main.py
+```
+
+3. Tarayıcı: http://localhost:8501  
+
+İleride “herkese açık web sitesi” istersen mimari değişir (uzak API, sunucu, maliyet). Bu haliyle hedef: **%100 yerel, API key yok**.
+
+---
+
+# 🔧 Ollama PATH (Windows)
+
+Ollama kuruluyken terminal `ollama` komutunu bulamıyorsa:
+
+1. Ollama klasörü genelde:  
+   `C:\Users\<KULLANICI>\AppData\Local\Programs\Ollama`
+2. **Yeni bir PowerShell/CMD** aç (PATH güncellemesi eski pencerelere yansımaz).
+3. Test:
+
+```powershell
+ollama --version
+ollama list
+```
+
+Hâlâ bulunamazsa (PowerShell, yönetici gerekmez):
+
+```powershell
+$ollama = "$env:LOCALAPPDATA\Programs\Ollama"
+[Environment]::SetEnvironmentVariable(
+  "Path",
+  ([Environment]::GetEnvironmentVariable("Path", "User").TrimEnd(';') + ";" + $ollama),
+  "User"
+)
+```
+
+Sonra **tüm terminalleri kapatıp yeniden aç**.  
+Uygulama aslında PATH’e ihtiyaç duymaz; Ollama arka planda açıksa `http://localhost:11434` yeterlidir.
+
+---
+
 # 📜 Lisans / Not
 
 Eğitim ve kişisel kullanım için örnek projedir. Üretilen kariyer tavsiyeleri bilgilendirme amaçlıdır; profesyonel İK danışmanlığı yerine geçmez.
