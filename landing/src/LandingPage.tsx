@@ -1,6 +1,7 @@
 /**
- * Pathora Landing — Awwwards-leaning product page
- * Lighter dark palette · heavy Framer Motion · WebGL hero (R3F)
+ * Pathora Landing — product page
+ * Lighter dark palette · heavy Framer Motion · creative path-map hero
+ * (no spinning 3D orb)
  *
  * Build-safe CSS: no fragile Tailwind @apply opacity utilities.
  */
@@ -15,19 +16,13 @@ import {
   type MotionValue,
 } from "framer-motion";
 import {
-  lazy,
-  Suspense,
-  useEffect,
   useRef,
   useState,
   type MouseEvent,
   type ReactNode,
 } from "react";
 import { BrandLogo } from "./BrandLogo";
-
-const NeuralScene = lazy(() =>
-  import("./NeuralScene").then((m) => ({ default: m.NeuralScene }))
-);
+import { HeroVisual } from "./HeroVisual";
 
 const REPO = "https://github.com/Dpehect/CarieerAi-FULLSTACK-AI-WEB-APP";
 
@@ -273,19 +268,13 @@ function Nav() {
 /* ─── hero ───────────────────────────────────────────────────────────────── */
 
 function Hero({ progress }: { progress: MotionValue<number> }) {
-  const yCopy = useTransform(progress, [0, 0.3], [0, -100]);
-  const yScene = useTransform(progress, [0, 0.35], [0, 160]);
-  const opScene = useTransform(progress, [0, 0.4], [1, 0.1]);
-  const [scroll3d, setScroll3d] = useState(0);
-
-  useEffect(
-    () => progress.on("change", (v) => setScroll3d(Math.min(1, v / 0.35))),
-    [progress]
-  );
+  const yCopy = useTransform(progress, [0, 0.3], [0, -70]);
+  const yVisual = useTransform(progress, [0, 0.35], [0, 90]);
+  const opVisual = useTransform(progress, [0, 0.4], [1, 0.25]);
 
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden pt-[4.25rem]">
-      {/* Brighter atmosphere */}
+      {/* Atmosphere */}
       <div className="pointer-events-none absolute inset-0">
         <motion.div
           className="absolute -left-24 top-16 h-[30rem] w-[30rem] rounded-full bg-aqua/25 blur-[100px]"
@@ -297,13 +286,8 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
           animate={{ scale: [1.08, 1, 1.08], y: [0, 24, 0] }}
           transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute bottom-10 left-1/3 h-72 w-72 rounded-full bg-ice/15 blur-[90px]"
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
         <div
-          className="absolute inset-0 opacity-40"
+          className="absolute inset-0 opacity-35"
           style={{
             backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
             backgroundSize: "26px 26px",
@@ -312,24 +296,8 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
         />
       </div>
 
-      <motion.div
-        style={{ y: yScene, opacity: opScene }}
-        className="pointer-events-none absolute inset-y-0 right-0 w-full lg:w-[58%]"
-      >
-        <Suspense
-          fallback={
-            <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-aqua/15 to-plum/15" />
-          }
-        >
-          <NeuralScene scroll={scroll3d} />
-        </Suspense>
-      </motion.div>
-
-      <motion.div
-        style={{ y: yCopy }}
-        className="shell relative z-10 flex min-h-[calc(100svh-4.25rem)] items-center py-20"
-      >
-        <div className="max-w-xl lg:max-w-[34rem]">
+      <div className="shell relative z-10 grid min-h-[calc(100svh-4.25rem)] items-center gap-10 py-16 lg:grid-cols-2 lg:gap-8">
+        <motion.div style={{ y: yCopy }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -341,14 +309,14 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
               animate={{ scale: [1, 1.35, 1], opacity: [1, 0.55, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-            On-device AI · Zero API keys · WebGL ready
+            On-device AI · Zero API keys
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 48 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.06, ease: EASE }}
-            className="font-display text-[2.9rem] font-semibold leading-[1.02] tracking-display text-white sm:text-6xl"
+            className="font-display text-[2.75rem] font-semibold leading-[1.02] tracking-display text-white sm:text-5xl lg:text-6xl"
           >
             Clarity for every
             <br />
@@ -397,7 +365,7 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
             {[
               ["0", "API keys"],
               ["100%", "On-device"],
-              ["WebGL", "Live field"],
+              ["Live", "Path map"],
             ].map(([k, v]) => (
               <motion.div
                 key={v}
@@ -412,6 +380,31 @@ function Hero({ progress }: { progress: MotionValue<number> }) {
               </motion.div>
             ))}
           </motion.div>
+        </motion.div>
+
+        {/* Creative motion visual (replaces spinning 3D orb) */}
+        <motion.div
+          style={{ y: yVisual, opacity: opVisual }}
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, delay: 0.2, ease: EASE }}
+          className="relative hidden h-[min(520px,70vh)] lg:block"
+        >
+          <div className="glass absolute inset-0 overflow-hidden rounded-[2rem]">
+            <HeroVisual />
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Mobile visual */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.8 }}
+        className="shell relative z-10 pb-16 lg:hidden"
+      >
+        <div className="glass h-[380px] overflow-hidden rounded-[1.75rem]">
+          <HeroVisual />
         </div>
       </motion.div>
 
@@ -513,9 +506,9 @@ function Process() {
 function Marquee() {
   const items = [
     "Ollama",
-    "Three.js",
-    "WebGL",
     "Framer Motion",
+    "Path map UI",
+    "Local AI",
     "ChromaDB",
     "Streamlit",
     "Local-first",
