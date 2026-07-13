@@ -54,7 +54,7 @@ class RAGEngine:
         # Koleksiyon: embedding fonksiyonu harici (biz üretiyoruz)
         self._collection = self._client.get_or_create_collection(
             name=self.collection_name,
-            metadata={"hnsw:space": "cosine", "app": "KariyerAI"},
+            metadata={"hnsw:space": "cosine", "app": "Pathora"},
         )
 
         # Ollama istemcisi (lazy import hatalarını net mesajla ver)
@@ -198,7 +198,7 @@ class RAGEngine:
             pass
         self._collection = self._client.get_or_create_collection(
             name=self.collection_name,
-            metadata={"hnsw:space": "cosine", "app": "KariyerAI"},
+            metadata={"hnsw:space": "cosine", "app": "Pathora"},
         )
 
     def reset_disk(self) -> None:
@@ -216,7 +216,7 @@ class RAGEngine:
         )
         self._collection = self._client.get_or_create_collection(
             name=self.collection_name,
-            metadata={"hnsw:space": "cosine", "app": "KariyerAI"},
+            metadata={"hnsw:space": "cosine", "app": "Pathora"},
         )
 
     # ------------------------------------------------------------------

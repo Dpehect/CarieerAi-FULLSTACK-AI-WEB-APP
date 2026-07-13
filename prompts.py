@@ -3,7 +3,7 @@ KariyerAI — Prompt şablonları
 Kısa, yapılandırılmış, token-dostu. Çıktı formatı sabit (parse/okuma kolay).
 """
 
-SYSTEM_PROMPT = """Sen KariyerAI: dürüst, somut, Türkçe kariyer koçu.
+SYSTEM_PROMPT = """Sen Pathora: dürüst, somut, Türkçe kariyer koçu.
 Kurallar: uydurma yok; CV/ilan metnine dayan; madde/tablo kullan; abartma.
 Cevapları gereksiz giriş cümlesi olmadan doğrudan başlıklarla ver."""
 

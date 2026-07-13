@@ -1,6 +1,6 @@
 /**
  * 3D neural field — hafif, performant R3F sahnesi.
- * Kariyer yolu + AI bağlantı metaforu.
+ * Career path + neural connection metaphor.
  */
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Line, Sphere } from "@react-three/drei";

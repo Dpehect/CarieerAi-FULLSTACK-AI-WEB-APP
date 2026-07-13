@@ -1,9 +1,9 @@
-"""KariyerAI — merkezi ayarlar (ücretsiz / yerel)."""
+"""Pathora — merkezi ayarlar (ücretsiz / yerel)."""
 
 from pathlib import Path
 
-APP_NAME = "KariyerAI"
-APP_TAGLINE = "Yerel AI kariyer koçu · API key yok"
+APP_NAME = "Pathora"
+APP_TAGLINE = "Local AI career intelligence · no API key"
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"

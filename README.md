@@ -1,6 +1,6 @@
-# KariyerAI — Yerel AI Kariyer Kocu
+# Pathora — Local AI Career Intelligence
 
-Profesyonel, **ucretsiz** ve **%100 yerel** kariyer kocu.
+Professional, **free**, **100% local** career coaching.
 
 - PDF / TXT / MD + metin CV ve is ilani
 - **ATS skoru** (aninda, LLM beklemez) + kelime etiketleri

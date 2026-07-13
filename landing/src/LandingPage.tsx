@@ -1,5 +1,5 @@
 /**
- * KariyerAI — Premium landing (single page, English UI).
+ * Pathora — Premium landing (single page, English UI).
  * React + Tailwind + Framer Motion + R3F
  */
 import {
@@ -10,6 +10,7 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { BrandLogo } from "./BrandLogo";
 
 /** Lazy-load Three.js scene for a faster first paint. */
 const NeuralScene = lazy(() =>
@@ -96,13 +97,8 @@ function Nav() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-        <a href="#top" className="group flex items-center gap-2.5">
-          <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-400/30 to-violet-500/30 ring-1 ring-white/15">
-            <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_16px_#22d3ee]" />
-          </span>
-          <span className="font-display text-lg font-semibold tracking-tight text-white">
-            Kariyer<span className="text-cyan-300">AI</span>
-          </span>
+        <a href="#top" className="group">
+          <BrandLogo size={34} />
         </a>
         <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
           <a className="transition hover:text-white" href="#features">
@@ -469,10 +465,10 @@ function Footer() {
   return (
     <footer className="border-t border-white/10 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 text-center text-sm text-slate-500 sm:flex-row sm:text-left sm:px-8">
-        <div>
-          <span className="font-display font-semibold text-slate-300">KariyerAI</span>
-          <span className="mx-2 text-slate-600">·</span>
-          Local AI career coach
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center">
+          <BrandLogo size={28} showWordmark />
+          <span className="text-slate-600 hidden sm:inline">·</span>
+          <span>Local AI career intelligence</span>
         </div>
         <div className="flex gap-5">
           <a className="hover:text-slate-300" href={REPO} target="_blank" rel="noreferrer">

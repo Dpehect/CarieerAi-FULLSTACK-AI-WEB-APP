@@ -1,5 +1,5 @@
 """
-KariyerAI — Rapor export (Markdown + HTML).
+Pathora — Rapor export (Markdown + HTML).
 Harici ücretli servis yok; tarayıcıdan indirilebilir dosya üretir.
 """
 
@@ -22,11 +22,11 @@ def build_markdown_report(
         "",
         f"_Oluşturulma: {datetime.now().strftime('%Y-%m-%d %H:%M')}_",
         "",
-        "> KariyerAI — yerel rapor. Tavsiyeler bilgilendirme amaçlıdır.",
+        "> Pathora — local report. Advice is informational only.",
         "",
     ]
     if meta:
-        lines.append("## Özet bilgiler")
+        lines.append("## Summary")
         for k, v in meta.items():
             lines.append(f"- **{k}:** {v}")
         lines.append("")
@@ -40,7 +40,7 @@ def build_markdown_report(
         lines.append("")
 
     lines.append("---")
-    lines.append("*KariyerAI · Ollama · %100 yerel*")
+    lines.append("*Pathora · Ollama · 100% local*")
     return "\n".join(lines)
 
 
@@ -54,7 +54,7 @@ def _md_inline(text: str) -> str:
     return text
 
 
-def markdown_to_simple_html(md: str, page_title: str = "KariyerAI Rapor") -> str:
+def markdown_to_simple_html(md: str, page_title: str = "Pathora Report") -> str:
     """Bağımlılıksız hafif HTML (yazdır / PDF olarak kaydet için uygun)."""
     body_parts: List[str] = []
     in_list = False
@@ -162,7 +162,7 @@ def markdown_to_simple_html(md: str, page_title: str = "KariyerAI Rapor") -> str
 
 def export_bundle(
     report_md: str,
-    title: str = "KariyerAI Rapor",
+    title: str = "Pathora Report",
 ) -> Dict[str, str]:
     """Hem md hem html string döner."""
     return {

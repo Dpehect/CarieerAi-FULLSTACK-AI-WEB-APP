@@ -1,5 +1,5 @@
 """
-KariyerAI — Profesyonel Streamlit arayüzü
+Pathora — Profesyonel Streamlit arayüzü
 Yerel · Ollama · ATS · RAG · Rapor · Ücretsiz
 Çalıştır: streamlit run main.py  |  start.bat
 """
@@ -229,7 +229,7 @@ def export_buttons(key: str, title: str) -> None:
         st.download_button(
             "Markdown indir",
             data=bundle["markdown"],
-            file_name=f"kariyerai_{key}_{datetime.now():%Y%m%d_%H%M}.md",
+            file_name=f"pathora_{key}_{datetime.now():%Y%m%d_%H%M}.md",
             mime="text/markdown",
             key=f"dl_md_{key}",
             use_container_width=True,
@@ -238,7 +238,7 @@ def export_buttons(key: str, title: str) -> None:
         st.download_button(
             "HTML indir (PDF icin yazdir)",
             data=bundle["html"],
-            file_name=f"kariyerai_{key}_{datetime.now():%Y%m%d_%H%M}.html",
+            file_name=f"pathora_{key}_{datetime.now():%Y%m%d_%H%M}.html",
             mime="text/html",
             key=f"dl_html_{key}",
             use_container_width=True,
@@ -627,7 +627,7 @@ def tab_ats() -> None:
     st.download_button(
         "Yerel ATS (.md) indir",
         data=raw_md,
-        file_name=f"kariyerai_ats_{datetime.now():%Y%m%d}.md",
+        file_name=f"pathora_ats_{datetime.now():%Y%m%d}.md",
         mime="text/markdown",
     )
 
@@ -671,7 +671,7 @@ def tab_chat() -> None:
         st.download_button(
             "Sohbet JSON",
             data=llm().export_memory_json(),
-            file_name="kariyerai_chat.json",
+            file_name="pathora_chat.json",
             mime="application/json",
         )
 
@@ -703,27 +703,27 @@ def tab_full_report() -> None:
 
     if "full" in st.session_state.results:
         md = build_markdown_report(
-            "KariyerAI Tam Rapor",
-            {"Rapor": st.session_state.results["full"]},
+            f"{APP_NAME} Full Report",
+            {"Report": st.session_state.results["full"]},
             meta={
                 "ATS": f"{ats.score}/100",
                 "Model": st.session_state.model_name,
-                "Tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             },
         )
-        bundle = export_bundle(md, "KariyerAI Tam Rapor")
+        bundle = export_bundle(md, f"{APP_NAME} Full Report")
         c1, c2 = st.columns(2)
         c1.download_button(
             "Rapor MD indir",
             bundle["markdown"],
-            f"kariyerai_full_{datetime.now():%Y%m%d}.md",
+            f"pathora_full_{datetime.now():%Y%m%d}.md",
             "text/markdown",
             use_container_width=True,
         )
         c2.download_button(
             "Rapor HTML indir",
             bundle["html"],
-            f"kariyerai_full_{datetime.now():%Y%m%d}.html",
+            f"pathora_full_{datetime.now():%Y%m%d}.html",
             "text/html",
             use_container_width=True,
         )
