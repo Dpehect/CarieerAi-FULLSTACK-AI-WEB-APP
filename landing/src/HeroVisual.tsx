@@ -28,12 +28,12 @@ export function HeroVisual() {
   const tiltY = useTransform(sx, [-0.5, 0.5], [-8, 8]);
   const shiftX = useTransform(sx, [-0.5, 0.5], [-14, 14]);
   const shiftY = useTransform(sy, [-0.5, 0.5], [-10, 10]);
+  const ghost1x = useTransform(sx, [-0.5, 0.5], [8, -8]);
+  const ghost2x = useTransform(sx, [-0.5, 0.5], [4, -4]);
+  const spotX = useTransform(sx, [-0.5, 0.5], ["35%", "65%"]);
+  const spotY = useTransform(sy, [-0.5, 0.5], ["30%", "70%"]);
 
-  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${useTransform(
-    sx,
-    [-0.5, 0.5],
-    ["35%", "65%"]
-  )} ${useTransform(sy, [-0.5, 0.5], ["30%", "70%"])}, rgba(255,255,255,0.09), transparent 55%)`;
+  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${spotX} ${spotY}, rgba(255,255,255,0.09), transparent 55%)`;
 
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -134,12 +134,12 @@ export function HeroVisual() {
         <motion.div
           aria-hidden
           className="absolute -inset-x-3 top-4 h-full rounded-3xl border border-white/5 bg-white/[0.03]"
-          style={{ x: useTransform(sx, [-0.5, 0.5], [8, -8]), y: 10 }}
+          style={{ x: ghost1x, y: 10 }}
         />
         <motion.div
           aria-hidden
           className="absolute -inset-x-1.5 top-2 h-full rounded-3xl border border-white/5 bg-white/[0.04]"
-          style={{ x: useTransform(sx, [-0.5, 0.5], [4, -4]), y: 5 }}
+          style={{ x: ghost2x, y: 5 }}
         />
 
         <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#121a2b]/90 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
