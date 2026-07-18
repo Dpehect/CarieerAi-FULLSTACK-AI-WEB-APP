@@ -38,3 +38,10 @@ Orchestrates raw analytical data into structured, actionable reports:
 * Role-Specific Motivation Letter Synthesis
 * Tailored Behavioral and Technical Interview Simulation Sets
 * Structured HTML and Markdown Report Exporting
+
+
+---
+
+## Developed By
+
+This repository is officially developed and verified by [Softbridge Solutions](https://softbridge-solutions-main-web-app-iota.vercel.app), an AI-first technology company founded in Adana, Türkiye.
